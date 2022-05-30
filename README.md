@@ -2,7 +2,8 @@
 
 ## Introduction
 
-The **io.il2.iltags** is a complete reimplementation of the original **io.interlockledger.tags**
+The **io.il2.iltags** is a complete reimplementation of the original
+**[io.interlockledger.tags](https://github.com/interlockledger/io.interlockledger.tags)**
 with the focus on small code footprint and extensibility. See 
 [ILInt](https://github.com/interlockledger/specification/tree/master/ILInt) and 
 [ILTags](https://github.com/interlockledger/specification/tree/master/ILTags)
@@ -14,7 +15,13 @@ purpose without restrictions.
 
 ## Compatibility with io.interlockledger.tags
 
-This new library is not compatible with **io.interlockledger.tags** but shares some of its 
+This new library do contain some classes and functionalities directly copied from 
+**[io.interlockledger.tags](https://github.com/interlockledger/io.interlockledger.tags)**.
+However the components in this library 
+
+it is not guaranteed to have the same interface or be compatible with it.
+
+is not compatible with **io.interlockledger.tags** but shares some of its 
 code base and utilities. It also changed the unit-tests library to **JUnit Jupiter** in
 replacement of **JUnit 4**.
 
