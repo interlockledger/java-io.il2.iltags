@@ -99,14 +99,14 @@ public class ILIntEncoder {
 			out.write((int) (u & 0xFF));
 			return encodedSize;
 		} else {
-			byte[] tmp = new byte[encodedSize];
+			byte[] tmp = new byte[9];
 			tmp[0] = (byte) (ILINT_BASE + encodedSize - 2);
 			u -= ILINT_BASE64;
-			for (int i = encodedSize - 1; i > 1; i--) {
+			for (int i = encodedSize - 1; i > 0; i--) {
 				tmp[i] = (byte) (u & 0xFF);
 				u = u >>> 8;
 			}
-			out.write(tmp);
+			out.write(tmp, 0, encodedSize);
 			return encodedSize;
 		}
 	}

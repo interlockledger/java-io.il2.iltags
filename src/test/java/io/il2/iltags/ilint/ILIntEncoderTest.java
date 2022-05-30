@@ -33,28 +33,76 @@ package io.il2.iltags.ilint;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.junit.jupiter.api.Test;
+
+import io.il2.iltags.io.ByteBufferDataOutput;
 
 class ILIntEncoderTest {
 
 	@Test
 	void testEncodedSize() {
-		fail("Not yet implemented");
+		assertEquals(1, ILIntEncoder.encodedSize(0x0000l));
+		assertEquals(1, ILIntEncoder.encodedSize(0x00F7l));
+		assertEquals(2, ILIntEncoder.encodedSize(0x00F8l));
+		assertEquals(2, ILIntEncoder.encodedSize(0x01F7l));
+		assertEquals(3, ILIntEncoder.encodedSize(0x01F8l));
+		assertEquals(3, ILIntEncoder.encodedSize(0x0001_00F7l));
+		assertEquals(4, ILIntEncoder.encodedSize(0x0001_00F8l));
+		assertEquals(4, ILIntEncoder.encodedSize(0x0100_00F7l));
+		assertEquals(5, ILIntEncoder.encodedSize(0x0100_00F8l));
+		assertEquals(5, ILIntEncoder.encodedSize(0x0001_0000_00F7l));
+		assertEquals(6, ILIntEncoder.encodedSize(0x0001_0000_00F8l));
+		assertEquals(6, ILIntEncoder.encodedSize(0x0100_0000_00F7l));
+		assertEquals(7, ILIntEncoder.encodedSize(0x0100_0000_00F8l));
+		assertEquals(7, ILIntEncoder.encodedSize(0x0001_0000_0000_00F7l));
+		assertEquals(8, ILIntEncoder.encodedSize(0x0001_0000_0000_00F8l));
+		assertEquals(8, ILIntEncoder.encodedSize(0x0100_0000_0000_00F7l));
+		assertEquals(9, ILIntEncoder.encodedSize(0x0100_0000_0000_00F8l));
+		assertEquals(9, ILIntEncoder.encodedSize(0xFFFF_FFFF_FFFF_FFFFl));
 	}
 
 	@Test
 	void testSignedEncodedSize() {
-		fail("Not yet implemented");
+
+		for (ILIntBaseTest.Sample s : ILIntBaseTest.SIGNED_SAMPLES) {
+			assertEquals(s.getEncodedSize(), ILIntEncoder.signedEncodedSize(s.getValue()));
+		}
 	}
 
 	@Test
-	void testEncode() {
-		fail("Not yet implemented");
+	void testEncode() throws Exception {
+		for (ILIntBaseTest.Sample s : ILIntBaseTest.SAMPLES) {
+			ByteBuffer buff = ByteBuffer.allocate(s.getEncodedSize());
+			ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
+			ILIntEncoder.encode(s.getValue(), out);
+			assertArrayEquals(s.getEncoded(), buff.array(), String.format("%1$X", s.getValue()));
+
+			// Test IOError
+			buff.position(0);
+			buff.limit(s.getEncodedSize() - 1);
+			assertThrows(IOException.class, () -> {
+				ILIntEncoder.encode(s.getValue(), out);
+			}, String.format("%1$X", s.getValue()));
+		}
 	}
 
 	@Test
-	void testEncodeSigned() {
-		fail("Not yet implemented");
-	}
+	void testEncodeSigned() throws Exception {
+		for (ILIntBaseTest.Sample s : ILIntBaseTest.SIGNED_SAMPLES) {
+			ByteBuffer buff = ByteBuffer.allocate(s.getEncodedSize());
+			ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
+			ILIntEncoder.encodeSigned(s.getValue(), out);
+			assertArrayEquals(s.getEncoded(), buff.array(), String.format("%1$X", s.getValue()));
 
+			// Test IOError
+			buff.position(0);
+			buff.limit(s.getEncodedSize() - 1);
+			assertThrows(IOException.class, () -> {
+				ILIntEncoder.encodeSigned(s.getValue(), out);
+			}, String.format("%1$X", s.getValue()));
+		}
+	}
 }
