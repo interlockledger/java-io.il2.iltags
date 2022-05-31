@@ -39,7 +39,7 @@ import java.io.IOException;
 import io.il2.iltags.ilint.ILIntEncoder;
 
 /**
- * 
+ * This abstract class implements the basic functionality of the tags.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
@@ -48,6 +48,11 @@ public abstract class BaseILTag implements ILTag {
 
 	private final long tagId;
 
+	/**
+	 * Creates a new instance of this class.
+	 * 
+	 * @param tagId The specified tag id.
+	 */
 	protected BaseILTag(long tagId) {
 		this.tagId = tagId;
 	}
@@ -89,9 +94,7 @@ public abstract class BaseILTag implements ILTag {
 	@Override
 	public byte[] toBytes() throws ILTagException {
 		long size = getTagSize();
-		if (size > MAX_TAG_SIZE) {
-			throw new TagTooLargeException("This tag is too large to be handled by this library.");
-		}
+		assertTagSizeLimit(size);
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream((int) size);
 		try (DataOutputStream out = new DataOutputStream(bOut)) {
 			serialize(out);
@@ -99,5 +102,20 @@ public abstract class BaseILTag implements ILTag {
 			throw new TagTooLargeException("Unable to serialize this tag.", e);
 		}
 		return bOut.toByteArray();
+	}
+
+	/**
+	 * Asserts that the value size is within the limits defined by this library. It
+	 * throws an exception if the tag value is too large to be handled by this
+	 * library.
+	 * 
+	 * @param valueSize The size of the value. It is handled as an unsigned value.
+	 * @throws TagTooLargeException If the value size is too large to be handled.
+	 */
+	public static void assertTagSizeLimit(long valueSize) throws TagTooLargeException {
+		if (Long.compareUnsigned(valueSize, MAX_TAG_SIZE) > 0) {
+			throw new TagTooLargeException(String.format("The tag value has %1$X but the maximum size allowed is %2$X.",
+					valueSize, MAX_TAG_SIZE));
+		}
 	}
 }

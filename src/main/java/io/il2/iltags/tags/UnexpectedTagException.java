@@ -32,6 +32,8 @@
 package io.il2.iltags.tags;
 
 /**
+ * This exception is used to notify when a tag is unexpected during a
+ * deserialization.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27

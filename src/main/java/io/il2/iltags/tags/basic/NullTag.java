@@ -39,6 +39,7 @@ import io.il2.iltags.tags.BaseILTag;
 import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.TagID;
 
 /**
  * This class implements the null tag.
@@ -67,5 +68,14 @@ public class NullTag extends BaseILTag {
 		if (valueSize != 0) {
 			throw new CorruptedTagException("Invalid value size.");
 		}
+	}
+
+	/**
+	 * Creates the standard null tag.
+	 * 
+	 * @return The standard null tag.
+	 */
+	public static NullTag createStandard() {
+		return new NullTag(TagID.IL_NULL_TAG_ID);
 	}
 }

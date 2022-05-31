@@ -40,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.io.ByteBufferDataOutput;
 import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.TagID;
 
 class NullTagTest {
 
@@ -74,5 +75,11 @@ class NullTagTest {
 		assertThrows(CorruptedTagException.class, () -> {
 			t.deserializeValue(null, 1, in);
 		});
+	}
+
+	@Test
+	void testCreateStandard() {
+		NullTag t = NullTag.createStandard();
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
 	}
 }

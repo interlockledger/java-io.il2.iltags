@@ -32,6 +32,7 @@
 package io.il2.iltags.tags;
 
 /**
+ * This exception is used to notify when a tag serialization is corrupted.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27

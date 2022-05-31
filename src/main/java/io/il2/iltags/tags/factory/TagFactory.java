@@ -31,55 +31,115 @@
  */
 package io.il2.iltags.tags.factory;
 
-import java.io.DataInput;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 
-import io.il2.iltags.ilint.ILIntDecoder;
-import io.il2.iltags.io.ByteBufferDataInput;
-import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.AbstractTagFactory;
 import io.il2.iltags.tags.ILTag;
 import io.il2.iltags.tags.ILTagException;
-import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.TagID;
-import io.il2.iltags.tags.UnexpectedTagException;
 import io.il2.iltags.tags.UnsupportedTagException;
+import io.il2.iltags.tags.basic.NullTag;
 
 /**
  * This class implements the ILTagFactory.
  * 
+ * <p>
+ * This factory has two modes of operation, the strict mode and the non-strict
+ * mode. In the strict mode, all unknown tags will result in an
+ * UnsupportedTagException. On the non-strict mode, unknown tags will be loaded
+ * as BytesTags.
+ * </p>
+ * 
+ * <p>
+ * Instances of this class are thread-safe.
+ * </p>
+ * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */
-public class TagFactory implements ILTagFactory {
+public class TagFactory extends AbstractTagFactory {
 
 	private final boolean strict;
 
 	private HashMap<Long, TagCreator> creators = new HashMap<>();
 
+	/**
+	 * Creates a new instance of this class.
+	 * 
+	 * @param strict Strict mode.
+	 */
 	public TagFactory(boolean strict) {
 		this.strict = strict;
 	}
 
+	/**
+	 * Returns the strict mode state.
+	 * 
+	 * @return True if this factory is working in strict mode or false otherwise.
+	 */
 	public boolean isStrict() {
 		return this.strict;
 	}
 
-	public void registerTag(long tagId, TagCreator creator) {
+	/**
+	 * Registers a new tag creator.
+	 * 
+	 * @param tagId   The target tag id. Only non reserved key IDs can be
+	 *                registered.
+	 * @param creator The tag creator. Set to null to unregister the creator for the
+	 *                given id.
+	 */
+	public synchronized void registerTagId(long tagId, TagCreator creator) {
 		if (TagID.isReserved(tagId)) {
-			throw new IllegalArgumentException("");
+			throw new IllegalArgumentException("Registration of handlers for reserved keys are not allowed.");
 		}
-		creators.put(tagId, creator);
+		if (creator != null) {
+			creators.put(tagId, creator);
+		} else {
+			creators.remove(tagId);
+		}
 	}
 
-	protected ILTag createReserved(long tagId) throws ILTagException {
-		// TODO
-		return null;
+	/**
+	 * Returns the creator for the given tag id.
+	 * 
+	 * @param tagId The tag id.
+	 * @return The instance of the that implements the given tag id.
+	 */
+	protected synchronized TagCreator getCreatorForId(long tagId) {
+		return creators.get(tagId);
 	}
 
-	protected ILTag createRegistered(long tagId) throws ILTagException {
-		TagCreator creator = creators.get(tagId);
+	/**
+	 * Creates a new reserved tag.
+	 * 
+	 * @param tagId The tag id.
+	 * @return The instance that implements the given tag.
+	 * @throws UnsupportedTagException If the tag id is not supported.
+	 */
+	protected ILTag createReserved(long tagId) throws UnsupportedTagException {
+		if (!TagID.isReserved(tagId)) {
+			throw new IllegalArgumentException(String.format("The tag id %1$X is not reserved.", tagId));
+		}
+		switch ((int) tagId) {
+		case (int) TagID.IL_NULL_TAG_ID:
+			return NullTag.createStandard();
+		// TODO Register other tags.
+		default:
+			throw new UnsupportedTagException();
+		}
+	}
+
+	/**
+	 * Creates a registered tag based on its id. This method is responsible to
+	 * implement the strict mode.
+	 * 
+	 * @param tagId The tag id.
+	 * @return The instance that implements the given tag id.
+	 * @throws UnsupportedTagException If the tag ID is not supported.
+	 */
+	protected ILTag createRegistered(long tagId) throws UnsupportedTagException {
+		TagCreator creator = getCreatorForId(tagId);
 		if (creator == null) {
 			if (isStrict()) {
 				throw new UnsupportedTagException(String.format("Tag with ID %1$X is not supported.", tagId));
@@ -98,43 +158,5 @@ public class TagFactory implements ILTagFactory {
 		} else {
 			return createRegistered(id);
 		}
-	}
-
-	@Override
-	public ILTag fromBytes(byte[] bytes) throws ILTagException {
-		ByteBuffer buff = ByteBuffer.wrap(bytes);
-		ByteBufferDataInput in = new ByteBufferDataInput(buff);
-		ILTag tag;
-		try {
-			tag = deserialize(in);
-		} catch (IOException e) {
-			throw new CorruptedTagException("Unable to deserialize the tag.", e);
-		}
-		if (buff.hasRemaining()) {
-			throw new CorruptedTagException("Too many bytes.");
-		}
-		return tag;
-	}
-
-	@Override
-	public ILTag deserialize(DataInput in) throws IOException, ILTagException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ILTag deserialize(long id, DataInput in) throws IOException, ILTagException {
-		long tagId = ILIntDecoder.decode(in);
-		if (tagId != id) {
-			throw new UnexpectedTagException(String.format("Expecting tag %1$X but found %1$X.", id, tagId));
-		}
-		ILTag tag = createTag(id);
-		// TODO
-		return tag;
-	}
-
-	@Override
-	public void deserializeInto(ILTag tag, DataInput in) throws IOException, ILTagException {
-		// TODO Auto-generated method stub
 	}
 }

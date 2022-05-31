@@ -36,6 +36,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
+ * This is the interface of all ILTags.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
@@ -47,20 +48,68 @@ public interface ILTag {
 	 */
 	static final long MAX_TAG_SIZE = 1024 * 1024 * 512;
 
+	/**
+	 * Returns the tag id.
+	 * 
+	 * @return The tag id.
+	 */
 	long getTagID();
 
+	/**
+	 * Returns true if this tag is implicit.
+	 * 
+	 * @return true if the tag is implicit or false otherwise.
+	 */
 	boolean isImplicit();
 
+	/**
+	 * Returns true if this tag is reserved.
+	 * 
+	 * @return true if the tag is reserved or false otherwise.
+	 */
 	boolean isReserved();
 
+	/**
+	 * Returns the size of this tag.
+	 * 
+	 * @return The size of this tag in bytes.
+	 */
 	long getTagSize();
 
+	/**
+	 * Serializes this tag.
+	 * 
+	 * @param out The data output.
+	 * @throws IOException    In case of IO errors.
+	 * @throws ILTagException In case of serialization errors.
+	 */
 	void serialize(DataOutput out) throws IOException, ILTagException;
 
+	/**
+	 * Returns the size of the value of the tag.
+	 * 
+	 * @return The size of the value of the tag in bytes.
+	 */
 	public long getValueSize();
 
+	/**
+	 * Serializes the value of this tag.
+	 * 
+	 * @param out The data output.
+	 * @throws IOException In case of IO errors.
+	 */
 	public void serializeValue(DataOutput out) throws IOException;
 
+	/**
+	 * Deserializes the value of this tag, replacing the current value if any.
+	 * 
+	 * @param factory   The ILTagFactory. It may be used to create inner tags if
+	 *                  any.
+	 * @param valueSize The size of the value in bytes.
+	 * @param in        The data input.
+	 * @throws IOException    In case of IO errors.
+	 * @throws ILTagException In case the tag serialization is invalid.
+	 */
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in) throws IOException, ILTagException;
 
 	byte[] toBytes() throws ILTagException;

@@ -32,6 +32,8 @@
 package io.il2.iltags.tags;
 
 /**
+ * This exception is used to notify when a tag serialization is too large to be
+ * handled by this library.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27

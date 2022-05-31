@@ -32,6 +32,7 @@
 package io.il2.iltags.tags;
 
 /**
+ * Base class for all ILTag exceptions.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27

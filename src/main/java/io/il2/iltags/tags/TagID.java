@@ -40,6 +40,12 @@ package io.il2.iltags.tags;
 public final class TagID {
 
 	/**
+	 * Lookup table to compute the sizes of the implicit tags. Unknown or undefined
+	 * tags will return -1.
+	 */
+	private static final int[] IMPLICIT_TAG_SIZES = { 0, 1, 1, 1, 2, 2, 4, 4, 8, 8, -1, 4, 8, 16, -1, -1 };
+
+	/**
 	 * Standard null tag ID.
 	 */
 	public static final long IL_NULL_TAG_ID = 0;
@@ -177,12 +183,38 @@ public final class TagID {
 	private TagID() {
 	}
 
+	/**
+	 * Verifies if the given tag id is implicit or not.
+	 * 
+	 * @param tagId The tag id.
+	 * @return true if the tag is implicit or false otherwise.
+	 */
 	public static boolean isImplicit(long tagId) {
 		return Long.compareUnsigned(tagId, 16) < 0;
 	}
 
+	/**
+	 * Verifies if the given tag id is reserved or not.
+	 * 
+	 * @param tagId The tag id.
+	 * @return true if the tag is reserved or false otherwise.
+	 */
 	public static boolean isReserved(long tagId) {
 		return Long.compareUnsigned(tagId, 32) < 0;
 	}
 
+	/**
+	 * Returns the size of the values of the implicit tags.
+	 * 
+	 * @param tagId The tag id to be validated.
+	 * @return Returns the size of the tag or -1 if the size is unknown or the tag
+	 *         is not implicit.
+	 */
+	public static long getImplicitValueSize(long tagId) {
+		if (isImplicit(tagId)) {
+			return IMPLICIT_TAG_SIZES[(int) tagId];
+		} else {
+			return -1;
+		}
+	}
 }

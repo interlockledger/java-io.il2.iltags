@@ -35,19 +35,65 @@ import java.io.DataInput;
 import java.io.IOException;
 
 /**
+ * This is the base interface for all Tag factories. Tag factories are
+ * responsible for the creation of tags based on the tag IDs and also the
+ * deserialization of the tags.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */
 public interface ILTagFactory {
 
+	/**
+	 * Creates a new tag that implements the given tag id.
+	 * 
+	 * @param id The tag id.
+	 * @return The ILTag that implements the given tag id.
+	 * @throws ILTagException If the tag id is not supported.
+	 */
 	ILTag createTag(long id) throws ILTagException;
 
+	/**
+	 * Deserializes the tag from a byte array. All bytes of the array must be part
+	 * of the tag otherwise the serialization will fail.
+	 * 
+	 * @param bytes The bytes of the tag.
+	 * @return The deserialized tag.
+	 * @throws ILTagException If the tag cannot be deserialized.
+	 */
 	ILTag fromBytes(byte[] bytes) throws ILTagException;
 
+	/**
+	 * Deserializes a single tag from the data input.
+	 * 
+	 * @param in The data input.
+	 * @return The deserialized tag.
+	 * @throws IOException    In case of IO Error.
+	 * @throws ILTagException In case of deserialization error.
+	 */
 	ILTag deserialize(DataInput in) throws IOException, ILTagException;
 
+	/**
+	 * Deserializes a single tag from the data input and validates if the serialized
+	 * tag is indeed the expected tag. The deserialization fails if the deserialized
+	 * tag does not match the expected tag id.
+	 * 
+	 * @param id The expected tag id.
+	 * @param in The data input.
+	 * @return The deserialized tag.
+	 * @throws IOException    In case of IO Error.
+	 * @throws ILTagException In case of the serialization error.
+	 */
 	ILTag deserialize(long id, DataInput in) throws IOException, ILTagException;
 
+	/**
+	 * Deserializes a single tag into the provided tag instance. The serialized tag
+	 * id must match the tag id of the provided tag instance.
+	 * 
+	 * @param tag The tag that will receive the tag.
+	 * @param in  The data input.
+	 * @throws IOException    In case of IO errors.
+	 * @throws ILTagException In case of serialization error.
+	 */
 	void deserializeInto(ILTag tag, DataInput in) throws IOException, ILTagException;
 }
