@@ -35,7 +35,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import io.il2.iltags.tags.BaseILTag;
+import io.il2.iltags.tags.AbsstractILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 
@@ -45,7 +45,7 @@ import io.il2.iltags.tags.ILTagFactory;
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */
-public class BytesTag extends BaseILTag {
+public class BytesTag extends AbsstractILTag {
 
 	protected byte[] value;
 

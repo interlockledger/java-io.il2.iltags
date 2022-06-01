@@ -72,7 +72,7 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 		} else {
 			try {
 				header.valueSize = ILIntDecoder.decode(in);
-				BaseILTag.assertTagSizeLimit(header.valueSize);
+				AbsstractILTag.assertTagSizeLimit(header.valueSize);
 			} catch (IllegalArgumentException e) {
 				throw new CorruptedTagException("Invalid tag value size.");
 			}
