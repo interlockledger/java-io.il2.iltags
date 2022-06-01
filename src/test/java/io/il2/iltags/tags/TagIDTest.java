@@ -83,4 +83,25 @@ class TagIDTest {
 		assertFalse(TagID.isReserved(32));
 		assertFalse(TagID.isReserved(-1));
 	}
+
+	@Test
+	void testGetImplicitValueSize() {
+		assertEquals(0, TagID.getImplicitValueSize(TagID.IL_NULL_TAG_ID));
+		assertEquals(1, TagID.getImplicitValueSize(TagID.IL_BOOL_TAG_ID));
+		assertEquals(1, TagID.getImplicitValueSize(TagID.IL_INT8_TAG_ID));
+		assertEquals(1, TagID.getImplicitValueSize(TagID.IL_UINT8_TAG_ID));
+		assertEquals(2, TagID.getImplicitValueSize(TagID.IL_INT16_TAG_ID));
+		assertEquals(2, TagID.getImplicitValueSize(TagID.IL_UINT16_TAG_ID));
+		assertEquals(4, TagID.getImplicitValueSize(TagID.IL_INT32_TAG_ID));
+		assertEquals(4, TagID.getImplicitValueSize(TagID.IL_UINT32_TAG_ID));
+		assertEquals(8, TagID.getImplicitValueSize(TagID.IL_INT64_TAG_ID));
+		assertEquals(8, TagID.getImplicitValueSize(TagID.IL_UINT64_TAG_ID));
+		assertEquals(-1, TagID.getImplicitValueSize(TagID.IL_ILINT_TAG_ID));
+		assertEquals(4, TagID.getImplicitValueSize(TagID.IL_BIN32_TAG_ID));
+		assertEquals(8, TagID.getImplicitValueSize(TagID.IL_BIN64_TAG_ID));
+		assertEquals(16, TagID.getImplicitValueSize(TagID.IL_BIN128_TAG_ID));
+		assertEquals(-1, TagID.getImplicitValueSize(TagID.IL_SIGNED_ILINT_TAG_ID));
+		assertEquals(-1, TagID.getImplicitValueSize(15));
+		assertEquals(-1, TagID.getImplicitValueSize(-1));
+	}
 }

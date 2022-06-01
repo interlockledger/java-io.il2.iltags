@@ -31,12 +31,12 @@
  */
 package io.il2.iltags.tags;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import io.il2.iltags.ilint.ILIntEncoder;
+import io.il2.iltags.io.ByteBufferDataOutput;
 
 /**
  * This abstract class implements the basic functionality of the tags.
@@ -82,12 +82,22 @@ public abstract class BaseILTag implements ILTag {
 		return size + valueSize;
 	}
 
-	@Override
-	public void serialize(DataOutput out) throws IOException, ILTagException {
+	/**
+	 * Serializes the tag header.
+	 * 
+	 * @param out The data output.
+	 * @throws IOException In case of IO error.
+	 */
+	protected void serializeHeader(DataOutput out) throws IOException {
 		ILIntEncoder.encode(tagId, out);
 		if (!isImplicit()) {
 			ILIntEncoder.encode(getValueSize(), out);
 		}
+	}
+
+	@Override
+	public void serialize(DataOutput out) throws IOException, ILTagException {
+		serializeHeader(out);
 		serializeValue(out);
 	}
 
@@ -95,13 +105,14 @@ public abstract class BaseILTag implements ILTag {
 	public byte[] toBytes() throws ILTagException {
 		long size = getTagSize();
 		assertTagSizeLimit(size);
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream((int) size);
-		try (DataOutputStream out = new DataOutputStream(bOut)) {
+		ByteBuffer buff = ByteBuffer.allocate((int) size);
+		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
+		try {
 			serialize(out);
 		} catch (IOException e) {
-			throw new TagTooLargeException("Unable to serialize this tag.", e);
+			throw new ILTagException("Unable to serialize this tag. The tag implementation may be be incorrect.", e);
 		}
-		return bOut.toByteArray();
+		return buff.array();
 	}
 
 	/**
