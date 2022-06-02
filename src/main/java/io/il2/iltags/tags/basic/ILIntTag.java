@@ -37,7 +37,7 @@ import java.io.IOException;
 
 import io.il2.iltags.ilint.ILIntDecoder;
 import io.il2.iltags.ilint.ILIntEncoder;
-import io.il2.iltags.tags.AbsstractILTag;
+import io.il2.iltags.tags.AbstractILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.TagID;
@@ -48,7 +48,7 @@ import io.il2.iltags.tags.TagID;
  * @author Fabio Jun Takada Chino
  * @since 2022.05.30
  */
-public class ILIntTag extends AbsstractILTag {
+public class ILIntTag extends AbstractILTag {
 
 	protected long value;
 

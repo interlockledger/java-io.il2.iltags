@@ -35,7 +35,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import io.il2.iltags.tags.AbsstractILTag;
+import io.il2.iltags.tags.AbstractILTag;
 import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
@@ -47,7 +47,7 @@ import io.il2.iltags.tags.TagID;
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */
-public class Int8Tag extends AbsstractILTag {
+public class Int8Tag extends AbstractILTag {
 
 	protected byte value;
 

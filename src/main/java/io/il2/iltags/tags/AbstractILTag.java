@@ -44,7 +44,7 @@ import io.il2.iltags.io.ByteBufferDataOutput;
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */
-public abstract class AbsstractILTag implements ILTag {
+public abstract class AbstractILTag implements ILTag {
 
 	private final long tagId;
 
@@ -53,7 +53,7 @@ public abstract class AbsstractILTag implements ILTag {
 	 * 
 	 * @param tagId The specified tag id.
 	 */
-	protected AbsstractILTag(long tagId) {
+	protected AbstractILTag(long tagId) {
 		this.tagId = tagId;
 	}
 
