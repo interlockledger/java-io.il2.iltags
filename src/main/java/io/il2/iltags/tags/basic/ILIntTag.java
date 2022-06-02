@@ -40,6 +40,7 @@ import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.tags.AbsstractILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.TagID;
 
 /**
  * This class implements the ILInt tag.
@@ -77,5 +78,14 @@ public class ILIntTag extends AbsstractILTag {
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
 		ILIntDecoder.decode(in);
+	}
+
+	/**
+	 * Creates the standard ILInt tag.
+	 * 
+	 * @return The standard tag.
+	 */
+	public static ILIntTag createStandard() {
+		return new ILIntTag(TagID.IL_ILINT_TAG_ID);
 	}
 }

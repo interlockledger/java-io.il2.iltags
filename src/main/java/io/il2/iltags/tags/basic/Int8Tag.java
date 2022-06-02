@@ -39,6 +39,7 @@ import io.il2.iltags.tags.AbsstractILTag;
 import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.TagID;
 
 /**
  * This class implements the signed and unsigned 8 bit integer tag.
@@ -87,5 +88,23 @@ public class Int8Tag extends AbsstractILTag {
 			throw new CorruptedTagException("Invalid value size.");
 		}
 		value = in.readByte();
+	}
+
+	/**
+	 * Creates the standard signed 8-bit integer tag.
+	 * 
+	 * @return The standard tag.
+	 */
+	public static Int8Tag createStandardSigned() {
+		return new Int8Tag(TagID.IL_INT8_TAG_ID);
+	}
+
+	/**
+	 * Creates the standard unsigned 8-bit integer tag.
+	 * 
+	 * @return The standard tag.
+	 */
+	public static Int8Tag createStandardUnsigned() {
+		return new Int8Tag(TagID.IL_UINT8_TAG_ID);
 	}
 }

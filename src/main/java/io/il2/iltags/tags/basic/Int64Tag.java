@@ -36,61 +36,67 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import io.il2.iltags.tags.AbsstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.TagID;
 
 /**
- * This class implements the bytes/raw tag.
+ * This class implements the signed and unsigned 64 bit integer tag.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * @since 2022.06.02
  */
-public class BytesTag extends AbsstractILTag {
+public class Int64Tag extends AbsstractILTag {
 
-	protected byte[] value;
+	protected long value;
 
-	public BytesTag(long tagId) {
+	public Int64Tag(long tagId) {
 		super(tagId);
 	}
 
-	public byte[] getValue() {
+	public long getValue() {
 		return value;
 	}
 
-	public void setValue(byte[] value) {
+	public void setValue(long value) {
 		this.value = value;
 	}
 
 	@Override
 	public long getValueSize() {
-		if (value != null) {
-			return value.length;
-		} else {
-			return 0;
-		}
+		return 8;
 	}
 
 	@Override
 	public void serializeValue(DataOutput out) throws IOException {
-		if (value != null) {
-			out.write(value);
-		}
+		out.writeLong(value);
 	}
 
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		value = new byte[(int) valueSize];
-		in.readFully(value);
+		if (valueSize != 8) {
+			throw new CorruptedTagException("Invalid value size.");
+		}
+		value = in.readLong();
 	}
 
 	/**
-	 * Creates the standard bytes tag.
+	 * Creates the standard signed 64-bit integer tag.
 	 * 
 	 * @return The standard tag.
 	 */
-	public static BytesTag createStandard() {
-		return new BytesTag(TagID.IL_BYTES_TAG_ID);
+	public static Int64Tag createStandardSigned() {
+		return new Int64Tag(TagID.IL_INT64_TAG_ID);
+	}
+
+	/**
+	 * Creates the standard unsigned 64-bit integer tag.
+	 * 
+	 * @return The standard tag.
+	 */
+	public static Int64Tag createStandardUnsigned() {
+		return new Int64Tag(TagID.IL_UINT64_TAG_ID);
 	}
 }

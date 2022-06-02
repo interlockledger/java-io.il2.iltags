@@ -36,61 +36,75 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import io.il2.iltags.tags.AbsstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.TagID;
 
 /**
- * This class implements the bytes/raw tag.
+ * This class implements the signed and unsigned 16 bit integer tag.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * @since 2022.06.02
  */
-public class BytesTag extends AbsstractILTag {
+public class Int16Tag extends AbsstractILTag {
 
-	protected byte[] value;
+	protected short value;
 
-	public BytesTag(long tagId) {
+	public Int16Tag(long tagId) {
 		super(tagId);
 	}
 
-	public byte[] getValue() {
+	public short getValue() {
 		return value;
 	}
 
-	public void setValue(byte[] value) {
+	public void setValue(short value) {
 		this.value = value;
+	}
+
+	public int getUnsignedValue() {
+		return value & 0xFFFF;
+	}
+
+	public void setUnsignedValue(int value) {
+		this.value = (short) value;
 	}
 
 	@Override
 	public long getValueSize() {
-		if (value != null) {
-			return value.length;
-		} else {
-			return 0;
-		}
+		return 2;
 	}
 
 	@Override
 	public void serializeValue(DataOutput out) throws IOException {
-		if (value != null) {
-			out.write(value);
-		}
+		out.writeShort(value & 0xFFFF);
 	}
 
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		value = new byte[(int) valueSize];
-		in.readFully(value);
+		if (valueSize != 2) {
+			throw new CorruptedTagException("Invalid value size.");
+		}
+		value = in.readShort();
 	}
 
 	/**
-	 * Creates the standard bytes tag.
+	 * Creates the standard signed 16-bit integer tag.
 	 * 
 	 * @return The standard tag.
 	 */
-	public static BytesTag createStandard() {
-		return new BytesTag(TagID.IL_BYTES_TAG_ID);
+	public static Int16Tag createStandardSigned() {
+		return new Int16Tag(TagID.IL_INT16_TAG_ID);
+	}
+
+	/**
+	 * Creates the standard unsigned 16-bit integer tag.
+	 * 
+	 * @return The standard tag.
+	 */
+	public static Int16Tag createStandardUnsigned() {
+		return new Int16Tag(TagID.IL_UINT16_TAG_ID);
 	}
 }
