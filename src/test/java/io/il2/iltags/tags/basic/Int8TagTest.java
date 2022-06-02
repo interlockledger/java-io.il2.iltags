@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.io.ByteBufferDataOutput;
 import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTagException;
 
 class Int8TagTest {
 
@@ -49,27 +50,41 @@ class Int8TagTest {
 
 	@Test
 	void testInt8Tag() {
-		fail("Not yet implemented");
+		Int8Tag t = new Int8Tag(123456);
+		assertEquals(123456, t.getTagID());
 	}
 
 	@Test
-	void testGetValue() {
-		fail("Not yet implemented");
+	void testGetValue() throws IOException, ILTagException {
+		ByteBuffer buff = ByteBuffer.wrap(BIN_SAMPLE);
+		ByteBufferDataInput in = new ByteBufferDataInput(buff);		
+		Int8Tag t = new Int8Tag(123456);
+		t.deserializeValue(null, 1, in);
+		assertEquals((byte) 0xCA, t.getValue());
 	}
 
 	@Test
 	void testSetValue() {
-		fail("Not yet implemented");
+		Int8Tag t = new Int8Tag(123456);
+		t.setValue((byte) 0xCA);
+		assertEquals((byte) 0xCA, t.getValue());
 	}
 
 	@Test
-	void testGetUnsignedValue() {
-		fail("Not yet implemented");
+	void testGetUnsignedValue() throws Exception {
+		ByteBuffer buff = ByteBuffer.wrap(BIN_SAMPLE);
+		ByteBufferDataInput in = new ByteBufferDataInput(buff);		
+		Int8Tag t = new Int8Tag(123456);
+		t.deserializeValue(null, 1, in);
+		t.deserializeValue(null, 1, in);		
+		assertEquals((byte) 0x7F, t.getValue());
 	}
 
 	@Test
-	void testSetUnsignedValue() {
-		fail("Not yet implemented");
+	void testSetUnsignedValue() throws IOException, ILTagException {	
+		Int8Tag t = new Int8Tag(123456);
+		t.setValue((byte) 0x7F);
+		assertEquals((byte) 0x7F, t.getValue());
 	}
 
 	@Test
