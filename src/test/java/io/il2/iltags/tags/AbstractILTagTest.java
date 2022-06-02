@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 
 class AbstractILTagTest {
 
-	private class BaseILTagX extends AbsstractILTag {
+	private class BaseILTagX extends AbstractILTag {
 
 		private final long valueSize;
 
@@ -191,14 +191,14 @@ class AbstractILTagTest {
 
 	@Test
 	void testAssertTagSizeLimit() throws Exception {
-		AbsstractILTag.assertTagSizeLimit(0);
-		AbsstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE);
+		AbstractILTag.assertTagSizeLimit(0);
+		AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE);
 
 		assertThrows(TagTooLargeException.class, () -> {
-			AbsstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE + 1);
+			AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE + 1);
 		});
 		assertThrows(TagTooLargeException.class, () -> {
-			AbsstractILTag.assertTagSizeLimit(-1);
+			AbstractILTag.assertTagSizeLimit(-1);
 		});
 	}
 }
