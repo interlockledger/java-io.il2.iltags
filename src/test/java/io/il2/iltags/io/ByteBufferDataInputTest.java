@@ -52,7 +52,7 @@ class ByteBufferDataInputTest {
 			(byte) 0x72, (byte) 0x74, (byte) 0x0e };
 
 	@Test
-	void testByteBufferDataInput() {
+	void testByteBufferDataInputByteBuffer() {
 		ByteBuffer b = ByteBuffer.allocate(1);
 
 		ByteBufferDataInput in = new ByteBufferDataInput(b);
@@ -63,6 +63,23 @@ class ByteBufferDataInputTest {
 		in = new ByteBufferDataInput(b);
 		assertSame(b, in.source);
 		assertEquals(ByteOrder.BIG_ENDIAN, b.order());
+	}
+
+	@Test
+	void testByteBufferDataInputByteArray() {
+		byte[] src = new byte[32];
+		ByteBufferDataInput in = new ByteBufferDataInput(src);
+		assertSame(src, in.source.array());
+		assertEquals(0, in.source.position());
+		assertEquals(src.length, in.source.limit());
+		assertEquals(ByteOrder.BIG_ENDIAN, in.source.order());
+
+		in = new ByteBufferDataInput(src, 1, 30);
+		assertSame(src, in.source.array());
+		assertEquals(1, in.source.position());
+		assertEquals(31, in.source.limit());
+		assertEquals(ByteOrder.BIG_ENDIAN, in.source.order());
+
 	}
 
 	@Test

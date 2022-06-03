@@ -61,6 +61,26 @@ public class ByteBufferDataInput implements DataInput {
 		this.source.order(ByteOrder.BIG_ENDIAN);
 	}
 
+	/**
+	 * Create a new instance of this class.
+	 * 
+	 * @param data   The data to be read.
+	 * @param offs   The initial offset.
+	 * @param length The length of the data.
+	 */
+	public ByteBufferDataInput(byte[] data, int offs, int length) {
+		this(ByteBuffer.wrap(data, offs, length));
+	}
+
+	/**
+	 * Create a new instance of this class.
+	 * 
+	 * @param data The data to be read.
+	 */
+	public ByteBufferDataInput(byte[] data) {
+		this(data, 0, data.length);
+	}
+
 	private final void assertAvailable(int len) throws EOFException {
 		if (this.source.remaining() < len) {
 			throw new EOFException("End of buffer reached.");
