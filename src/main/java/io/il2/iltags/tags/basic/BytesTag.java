@@ -81,6 +81,7 @@ public class BytesTag extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
+		assertTagSizeLimit(valueSize);
 		value = new byte[(int) valueSize];
 		in.readFully(value);
 	}
