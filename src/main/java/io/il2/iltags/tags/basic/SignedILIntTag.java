@@ -77,7 +77,7 @@ public class SignedILIntTag extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		ILIntDecoder.decodeSigned(in);
+		this.value = ILIntDecoder.decodeSigned(in);
 	}
 
 	/**
