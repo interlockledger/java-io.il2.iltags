@@ -35,7 +35,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataOutput;
 
 /**

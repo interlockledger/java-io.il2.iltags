@@ -66,6 +66,13 @@ public interface ILTagFactory {
 	/**
 	 * Deserializes a single tag from the data input.
 	 * 
+	 * <p>
+	 * In order to better control the size of the information read from the stream,
+	 * all methods from DataInput can be use with the exception of the methods
+	 * java.io.DataInput.readLine() and java.io.DataInput.readUTF(). Any attempt to
+	 * use one of those methods may result in unexpected errors.
+	 * </p>
+	 * 
 	 * @param in The data input.
 	 * @return The deserialized tag.
 	 * @throws IOException    In case of IO Error.
@@ -78,6 +85,13 @@ public interface ILTagFactory {
 	 * tag is indeed the expected tag. The deserialization fails if the deserialized
 	 * tag does not match the expected tag id.
 	 * 
+	 * <p>
+	 * In order to better control the size of the information read from the stream,
+	 * all methods from DataInput can be use with the exception of the methods
+	 * java.io.DataInput.readLine() and java.io.DataInput.readUTF(). Any attempt to
+	 * use one of those methods may result in unexpected errors.
+	 * </p>
+	 * 
 	 * @param id The expected tag id.
 	 * @param in The data input.
 	 * @return The deserialized tag.
@@ -89,6 +103,13 @@ public interface ILTagFactory {
 	/**
 	 * Deserializes a single tag into the provided tag instance. The serialized tag
 	 * id must match the tag id of the provided tag instance.
+	 * 
+	 * <p>
+	 * In order to better control the size of the information read from the stream,
+	 * all methods from DataInput can be use with the exception of the methods
+	 * java.io.DataInput.readLine() and java.io.DataInput.readUTF(). Any attempt to
+	 * use one of those methods may result in unexpected errors.
+	 * </p>
 	 * 
 	 * @param tag The tag that will receive the tag.
 	 * @param in  The data input.

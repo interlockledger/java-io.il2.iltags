@@ -149,7 +149,6 @@ class AbstractILTagTest {
 			ILIntEncoder.encode(size, out);
 		}
 		assertArrayEquals(exp.toByteArray(), bOut.toByteArray());
-
 	}
 
 	@Test

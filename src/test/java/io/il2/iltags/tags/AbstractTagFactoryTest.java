@@ -32,8 +32,10 @@
 package io.il2.iltags.tags;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -44,6 +46,8 @@ import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.tags.basic.BytesTag;
 import io.il2.iltags.tags.basic.ILIntTag;
+import io.il2.iltags.tags.basic.Int16Tag;
+import io.il2.iltags.tags.basic.Int32Tag;
 import io.il2.iltags.tags.basic.NullTag;
 
 class AbstractTagFactoryTest {
@@ -55,6 +59,8 @@ class AbstractTagFactoryTest {
 			// Simplified version with edge cases.
 			if (id == TagID.IL_NULL_TAG_ID) {
 				return NullTag.createStandard();
+			} else if (id == TagID.IL_INT16_TAG_ID) {
+				return Int16Tag.createStandardSigned();
 			} else if (id == TagID.IL_ILINT_TAG_ID) {
 				return ILIntTag.createStandard();
 			} else if (!TagID.isImplicit(id)) {
@@ -73,6 +79,10 @@ class AbstractTagFactoryTest {
 		assertInstanceOf(NullTag.class, t);
 		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
 
+		t = f.createTag(TagID.IL_INT16_TAG_ID);
+		assertInstanceOf(Int16Tag.class, t);
+		assertEquals(TagID.IL_INT16_TAG_ID, t.getTagID());
+
 		t = f.createTag(TagID.IL_ILINT_TAG_ID);
 		assertInstanceOf(ILIntTag.class, t);
 		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
@@ -87,24 +97,155 @@ class AbstractTagFactoryTest {
 	}
 
 	@Test
-	void testFromBytes() {
+	void testDeserializeValue() throws Exception {
 		AbstractTagFactoryX f = new AbstractTagFactoryX();
 
+		ByteBufferDataInput in = new ByteBufferDataInput(new byte[] { 0, 1, 2, 3 });
+		ILTag t = new Int16Tag(123123);
+		f.deserializeValue(t, 2, in);
+
+		in = new ByteBufferDataInput(new byte[] { 0, 1, 2, 3 });
+		t = new ILIntTag(123123);
+		f.deserializeValue(t, -1, in);
+
+		assertThrows(CorruptedTagException.class, () -> {
+			ILTag mt = mock(ILTag.class);
+			DataInput in2 = new ByteBufferDataInput(new byte[] { 0, 1, 2, 3 });
+			f.deserializeValue(mt, 1, in2);
+		});
 	}
 
 	@Test
-	void testDeserializeDataInput() {
-		fail("Not yet implemented");
+	void testFromBytes() throws Exception {
+		AbstractTagFactoryX f = new AbstractTagFactoryX();
+
+		ILTag t = f.fromBytes(new byte[] { 0 });
+		assertInstanceOf(NullTag.class, t);
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
+
+		t = f.fromBytes(new byte[] { (byte) 0x4, (byte) 0x12, (byte) 0x34 });
+		assertInstanceOf(Int16Tag.class, t);
+		assertEquals(TagID.IL_INT16_TAG_ID, t.getTagID());
+		assertEquals(0x1234, ((Int16Tag) t).getValue());
+
+		t = f.fromBytes(new byte[] { (byte) 0xA, (byte) 0xf7 });
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF7, ((ILIntTag) t).getValue());
+
+		t = f.fromBytes(new byte[] { (byte) 0xA, (byte) 0xf8, 0x00 });
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF8, ((ILIntTag) t).getValue());
+
+		t = f.fromBytes(new byte[] { (byte) 0x10, 0x02, 0x12, 0x34 });
+		assertInstanceOf(BytesTag.class, t);
+		assertEquals(TagID.IL_BYTES_TAG_ID, t.getTagID());
+		assertArrayEquals(new byte[] { 0x12, 0x34 }, ((BytesTag) t).getValue());
+
+		assertThrows(UnsupportedTagException.class, () -> {
+			f.fromBytes(new byte[] { (byte) 0x0F });
+		});
+
+		assertThrows(CorruptedTagException.class, () -> {
+			f.fromBytes(new byte[] { 0x00, 0x00 });
+		});
 	}
 
 	@Test
-	void testDeserializeLongDataInput() {
-		fail("Not yet implemented");
+	void testDeserializeDataInput() throws Exception {
+		AbstractTagFactoryX f = new AbstractTagFactoryX();
+
+		ILTag t = f.deserialize(new ByteBufferDataInput(new byte[] { 0 }));
+		assertInstanceOf(NullTag.class, t);
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
+
+		t = f.deserialize(new ByteBufferDataInput(new byte[] { 0, 0x0f }));
+		assertInstanceOf(NullTag.class, t);
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
+
+		t = f.deserialize(new ByteBufferDataInput(new byte[] { (byte) 0x4, (byte) 0x12, (byte) 0x34 }));
+		assertInstanceOf(Int16Tag.class, t);
+		assertEquals(TagID.IL_INT16_TAG_ID, t.getTagID());
+		assertEquals(0x1234, ((Int16Tag) t).getValue());
+
+		t = f.deserialize(new ByteBufferDataInput(new byte[] { (byte) 0xA, (byte) 0xf7 }));
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF7, ((ILIntTag) t).getValue());
+
+		t = f.deserialize(new ByteBufferDataInput(new byte[] { (byte) 0xA, (byte) 0xf8, 0x00 }));
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF8, ((ILIntTag) t).getValue());
+
+		t = f.deserialize(new ByteBufferDataInput(new byte[] { (byte) 0x10, 0x02, 0x12, 0x34 }));
+		assertInstanceOf(BytesTag.class, t);
+		assertEquals(TagID.IL_BYTES_TAG_ID, t.getTagID());
+		assertArrayEquals(new byte[] { 0x12, 0x34 }, ((BytesTag) t).getValue());
+
+		assertThrows(UnsupportedTagException.class, () -> {
+			f.deserialize(new ByteBufferDataInput(new byte[] { 0x0f }));
+		});
 	}
 
 	@Test
-	void testDeserializeInto() {
-		fail("Not yet implemented");
+	void testDeserializeLongDataInput() throws Exception {
+		AbstractTagFactoryX f = new AbstractTagFactoryX();
+
+		ILTag t = f.deserialize(TagID.IL_NULL_TAG_ID, new ByteBufferDataInput(new byte[] { 0 }));
+		assertInstanceOf(NullTag.class, t);
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
+
+		t = f.deserialize(TagID.IL_NULL_TAG_ID, new ByteBufferDataInput(new byte[] { 0, 0x0f }));
+		assertInstanceOf(NullTag.class, t);
+		assertEquals(TagID.IL_NULL_TAG_ID, t.getTagID());
+
+		t = f.deserialize(TagID.IL_INT16_TAG_ID,
+				new ByteBufferDataInput(new byte[] { (byte) 0x4, (byte) 0x12, (byte) 0x34 }));
+		assertInstanceOf(Int16Tag.class, t);
+		assertEquals(TagID.IL_INT16_TAG_ID, t.getTagID());
+		assertEquals(0x1234, ((Int16Tag) t).getValue());
+
+		t = f.deserialize(TagID.IL_ILINT_TAG_ID, new ByteBufferDataInput(new byte[] { (byte) 0xA, (byte) 0xf7 }));
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF7, ((ILIntTag) t).getValue());
+
+		t = f.deserialize(TagID.IL_ILINT_TAG_ID, new ByteBufferDataInput(new byte[] { (byte) 0xA, (byte) 0xf8, 0x00 }));
+		assertInstanceOf(ILIntTag.class, t);
+		assertEquals(TagID.IL_ILINT_TAG_ID, t.getTagID());
+		assertEquals(0xF8, ((ILIntTag) t).getValue());
+
+		t = f.deserialize(TagID.IL_BYTES_TAG_ID, new ByteBufferDataInput(new byte[] { (byte) 0x10, 0x02, 0x12, 0x34 }));
+		assertInstanceOf(BytesTag.class, t);
+		assertEquals(TagID.IL_BYTES_TAG_ID, t.getTagID());
+		assertArrayEquals(new byte[] { 0x12, 0x34 }, ((BytesTag) t).getValue());
+
+		assertThrows(UnsupportedTagException.class, () -> {
+			f.deserialize(0x0f, new ByteBufferDataInput(new byte[] { 0x0f }));
+		});
+
+		assertThrows(UnexpectedTagException.class, () -> {
+			f.deserialize(TagID.IL_ILINT_TAG_ID, new ByteBufferDataInput(new byte[] { 0x00 }));
+		});
 	}
 
+	@Test
+	void testDeserializeInto() throws Exception {
+		AbstractTagFactoryX f = new AbstractTagFactoryX();
+
+		ILTag t = NullTag.createStandard();
+		f.deserializeInto(t, new ByteBufferDataInput(new byte[] { 0 }));
+
+		t = Int16Tag.createStandardSigned();
+		f.deserializeInto(t, new ByteBufferDataInput(new byte[] { (byte) 0x4, (byte) 0x12, (byte) 0x34 }));
+		assertEquals(0x1234, ((Int16Tag) t).getValue());
+
+		t = new Int16Tag(1233);
+		assertThrows(UnexpectedTagException.class, () -> {
+			ILTag t2 = new Int16Tag(1233);
+			f.deserializeInto(t2, new ByteBufferDataInput(new byte[] { (byte) 0x4, (byte) 0x12, (byte) 0x34 }));
+		});
+	}
 }

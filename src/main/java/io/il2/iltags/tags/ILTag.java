@@ -105,6 +105,13 @@ public interface ILTag {
 	/**
 	 * Deserializes the value of this tag, replacing the current value if any.
 	 * 
+	 * <p>
+	 * In order to better control the size of the information read from the stream,
+	 * all methods from DataInput can be use with the exception of the methods
+	 * java.io.DataInput.readLine() and java.io.DataInput.readUTF(). Any attempt to
+	 * use one of those methods may result in unexpected errors.
+	 * </p>
+	 * 
 	 * @param factory   The ILTagFactory. It may be used to create inner tags if
 	 *                  any.
 	 * @param valueSize The size of the value in bytes.

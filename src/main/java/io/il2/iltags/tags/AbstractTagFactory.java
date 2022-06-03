@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import io.il2.iltags.io.ByteBufferDataInput;
+import io.il2.iltags.io.LimitedDataInput;
 
 /**
  * This class implements an abstract ILTagFactory. It implements all methods
@@ -62,11 +63,35 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 		return tag;
 	}
 
+	/**
+	 * Reads the value and ensures that all bytes where used.
+	 * 
+	 * @param tag       The tag.
+	 * @param valueSize The value size. It may be -1 if the size is unknown.
+	 * @param in        The data input.
+	 * @throws IOException    In case of IO error.
+	 * @throws ILTagException If the serialization data is corrupted.
+	 */
+	protected void deserializeValue(ILTag tag, long valueSize, DataInput in)
+			throws IOException, CorruptedTagException, ILTagException {
+		if (valueSize >= 0) {
+			LimitedDataInput limited = new LimitedDataInput(in, (int) valueSize);
+			tag.deserializeValue(this, valueSize, limited);
+			if (limited.hasRemaining()) {
+				throw new CorruptedTagException(
+						String.format("Value deserialization error. Only %1$d bytes used out of %2$d.",
+								limited.remaining(), valueSize));
+			}
+		} else {
+			tag.deserializeValue(this, valueSize, in);
+		}
+	}
+
 	@Override
 	public ILTag deserialize(DataInput in) throws IOException, ILTagException {
 		ILTagHeader header = ILTagHeader.deserializeHeader(in);
 		ILTag tag = this.createTag(header.tagId);
-		tag.deserializeValue(this, header.valueSize, in);
+		deserializeValue(tag, header.valueSize, in);
 		return tag;
 	}
 
@@ -77,7 +102,7 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 			throw new UnexpectedTagException(String.format("Expecting %1$X but found %2$X.", header.tagId, id));
 		}
 		ILTag tag = this.createTag(header.tagId);
-		tag.deserializeValue(this, header.valueSize, in);
+		deserializeValue(tag, header.valueSize, in);
 		return tag;
 	}
 
@@ -88,6 +113,6 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 			throw new UnexpectedTagException(
 					String.format("Expecting %1$X but found %2$X.", header.tagId, tag.getTagID()));
 		}
-		tag.deserializeValue(this, header.valueSize, in);
+		deserializeValue(tag, header.valueSize, in);
 	}
 }
