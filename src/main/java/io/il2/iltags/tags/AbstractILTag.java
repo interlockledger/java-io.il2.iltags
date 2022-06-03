@@ -74,37 +74,20 @@ public abstract class AbstractILTag implements ILTag {
 
 	@Override
 	public long getTagSize() {
-		long size = ILIntEncoder.encodedSize(tagId);
 		long valueSize = this.getValueSize();
-		if (!isImplicit()) {
-			size += ILIntEncoder.encodedSize(valueSize);
-		}
-		return size + valueSize;
-	}
-
-	/**
-	 * Serializes the tag header.
-	 * 
-	 * @param out The data output.
-	 * @throws IOException In case of IO error.
-	 */
-	protected void serializeHeader(DataOutput out) throws IOException {
-		ILIntEncoder.encode(tagId, out);
-		if (!isImplicit()) {
-			ILIntEncoder.encode(getValueSize(), out);
-		}
+		return ILTagHeader.getSerializedSize(getTagID(), valueSize) + valueSize;
 	}
 
 	@Override
 	public void serialize(DataOutput out) throws IOException, ILTagException {
-		serializeHeader(out);
+		ILTagHeader.serialize(getTagID(), getValueSize(), out);
 		serializeValue(out);
 	}
 
 	@Override
 	public byte[] toBytes() throws ILTagException {
+		assertTagSizeLimit(getValueSize());
 		long size = getTagSize();
-		assertTagSizeLimit(size);
 		ByteBuffer buff = ByteBuffer.allocate((int) size);
 		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
 		try {
@@ -124,9 +107,9 @@ public abstract class AbstractILTag implements ILTag {
 	 * @throws TagTooLargeException If the value size is too large to be handled.
 	 */
 	public static void assertTagSizeLimit(long valueSize) throws TagTooLargeException {
-		if (Long.compareUnsigned(valueSize, MAX_TAG_SIZE) > 0) {
+		if (Long.compareUnsigned(valueSize, MAX_TAG_VALUE_SIZE) > 0) {
 			throw new TagTooLargeException(String.format("The tag value has %1$X but the maximum size allowed is %2$X.",
-					valueSize, MAX_TAG_SIZE));
+					valueSize, MAX_TAG_VALUE_SIZE));
 		}
 	}
 }

@@ -44,9 +44,11 @@ import java.io.IOException;
 public interface ILTag {
 
 	/**
-	 * Maximum size of tag that this library can handle.
+	 * Maximum size of tag value that this library can handle. This limit has been
+	 * defined in order to prevent potential issues with incorrect data
+	 * serializations and prevent memory abuse.
 	 */
-	static final long MAX_TAG_SIZE = 1024 * 1024 * 512;
+	static final long MAX_TAG_VALUE_SIZE = 1024 * 1024 * 512;
 
 	/**
 	 * Returns the tag id.

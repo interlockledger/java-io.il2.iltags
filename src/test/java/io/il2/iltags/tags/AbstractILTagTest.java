@@ -41,11 +41,15 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
+import io.il2.iltags.ilint.ILIntEncoder;
+
 class AbstractILTagTest {
 
 	private class BaseILTagX extends AbstractILTag {
 
 		private final long valueSize;
+
+		public DataOutput out;
 
 		public BaseILTagX(long tagId, long valueSize) {
 			super(tagId);
@@ -59,22 +63,13 @@ class AbstractILTagTest {
 
 		@Override
 		public void serializeValue(DataOutput out) throws IOException {
-			for (long i = 0; i < valueSize; i++) {
-				out.write((byte) i);
-			}
+			this.out = out;
 		}
 
 		@Override
 		public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 				throws IOException, ILTagException {
-			if (this.valueSize != valueSize) {
-				throw new CorruptedTagException("Tag is corrupted.");
-			}
-			for (long i = 0; i < valueSize; i++) {
-				if (in.readUnsignedByte() != (int) (i & 0xFF)) {
-					throw new CorruptedTagException("Tag is corrupted because the read value is wrong.");
-				}
-			}
+			throw new ILTagException("You are not supposed to call me.");
 		}
 	}
 
@@ -112,79 +107,68 @@ class AbstractILTagTest {
 
 	@Test
 	void testGetTagSize() {
-		BaseILTagX t = new BaseILTagX(0, 0);
-		assertEquals(1, t.getTagSize());
+		BaseILTagX t;
 
-		t = new BaseILTagX(2, 10);
-		assertEquals(1 + 10, t.getTagSize());
-
-		t = new BaseILTagX(0xFFFF_FFFF_FFFF_FFFFl, 0xFFFF_FFFFl);
-		assertEquals(9 + 5 + 0xFFFF_FFFFl, t.getTagSize());
-	}
-
-	@Test
-	void testSerializeHeader() throws Exception {
 		// Implicit
-		BaseILTagX t = new BaseILTagX(TagID.IL_INT16_TAG_ID, 2);
-		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-		try (DataOutputStream out = new DataOutputStream(bOut)) {
-			t.serializeHeader(out);
+		for (long id = 0; id < 16; id++) {
+			t = new BaseILTagX(id, id);
+			assertEquals(1 + id, t.getTagSize());
 		}
-		assertArrayEquals(new byte[] { 0x04 }, bOut.toByteArray());
-
 		// Explicit
-		t = new BaseILTagX(255, 65536);
-		bOut = new ByteArrayOutputStream();
-		try (DataOutputStream out = new DataOutputStream(bOut)) {
-			t.serializeHeader(out);
-		}
-		assertArrayEquals(new byte[] { (byte) 0xF8, (byte) 0x07, (byte) 0xF9, (byte) 0xFF, (byte) 0x08 },
-				bOut.toByteArray());
-
-		t = new BaseILTagX(0xFFFF_FFFF_FFFF_FFFFl, 0x1234567890l);
-		bOut = new ByteArrayOutputStream();
-		try (DataOutputStream out = new DataOutputStream(bOut)) {
-			t.serializeHeader(out);
-		}
-		assertArrayEquals(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-				(byte) 0xFF, (byte) 0xFF, (byte) 0x07, (byte) 0xFC, (byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x77,
-				(byte) 0x98 }, bOut.toByteArray());
+		t = new BaseILTagX(0xFFFF_FFFF_FFFF_FFFFl, 0xFFFF_FFFFl);
+		assertEquals(
+				ILIntEncoder.encodedSize(t.getTagID()) + ILIntEncoder.encodedSize(t.getValueSize()) + t.getValueSize(),
+				t.getTagSize());
 	}
 
 	@Test
 	void testSerialize() throws Exception {
-		// Simulate an implicit tag
-		BaseILTagX t = new BaseILTagX(TagID.IL_INT16_TAG_ID, 2);
+
+		// Explicit
+		for (long id = 0; id < 16; id++) {
+			BaseILTagX t = new BaseILTagX(id, 2);
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			try (DataOutputStream out = new DataOutputStream(bOut)) {
+				t.serialize(out);
+				assertSame(out, t.out);
+			}
+			assertArrayEquals(new byte[] { (byte) id }, bOut.toByteArray());
+		}
+
+		long id = 0xFFFF_FFFF_FFFF_FFFFl;
+		long size = 0x1234567890l;
+		BaseILTagX t = new BaseILTagX(id, size);
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 		try (DataOutputStream out = new DataOutputStream(bOut)) {
 			t.serialize(out);
+			assertSame(out, t.out);
 		}
-		assertArrayEquals(new byte[] { 0x04, 0x00, 0x01 }, bOut.toByteArray());
+		ByteArrayOutputStream exp = new ByteArrayOutputStream();
+		try (DataOutputStream out = new DataOutputStream(exp)) {
+			ILIntEncoder.encode(id, out);
+			ILIntEncoder.encode(size, out);
+		}
+		assertArrayEquals(exp.toByteArray(), bOut.toByteArray());
 
-		// Simulate an implicit tag
-		t = new BaseILTagX(16, 2);
-		bOut = new ByteArrayOutputStream();
-		try (DataOutputStream out = new DataOutputStream(bOut)) {
-			t.serialize(out);
-		}
-		assertArrayEquals(new byte[] { 0x10, 0x02, 0x00, 0x01 }, bOut.toByteArray());
 	}
 
 	@Test
 	void testToBytes() throws Exception {
 		// Simulate an implicit tag
-		BaseILTagX t = new BaseILTagX(TagID.IL_INT16_TAG_ID, 2);
+		BaseILTagX t = new BaseILTagX(TagID.IL_INT16_TAG_ID, 1);
 		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 		try (DataOutputStream out = new DataOutputStream(bOut)) {
 			t.serialize(out);
+			out.write(new byte[(int) t.getValueSize()]);
 		}
 		assertArrayEquals(bOut.toByteArray(), t.toBytes());
 
-		// Simulate an implicit tag
-		t = new BaseILTagX(16, 2);
+		// Simulate an explicit tag
+		t = new BaseILTagX(0x123123123123l, 0x1FF);
 		bOut = new ByteArrayOutputStream();
 		try (DataOutputStream out = new DataOutputStream(bOut)) {
 			t.serialize(out);
+			out.write(new byte[(int) t.getValueSize()]);
 		}
 		assertArrayEquals(bOut.toByteArray(), t.toBytes());
 	}
@@ -192,10 +176,10 @@ class AbstractILTagTest {
 	@Test
 	void testAssertTagSizeLimit() throws Exception {
 		AbstractILTag.assertTagSizeLimit(0);
-		AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE);
+		AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_VALUE_SIZE);
 
 		assertThrows(TagTooLargeException.class, () -> {
-			AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_SIZE + 1);
+			AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_VALUE_SIZE + 1);
 		});
 		assertThrows(TagTooLargeException.class, () -> {
 			AbstractILTag.assertTagSizeLimit(-1);

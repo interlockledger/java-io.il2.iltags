@@ -199,19 +199,19 @@ class ILTagHeaderTest {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_SIZE, out);
+				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE, out);
 			}
 			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
 			h.deserialize(in);
 			assertEquals(id, h.tagId);
-			assertEquals(ILTag.MAX_TAG_SIZE, h.valueSize);
+			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
 
 		for (long id : SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_SIZE + 1, out);
+				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE + 1, out);
 			}
 			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
 			assertThrows(TagTooLargeException.class, () -> {
@@ -254,19 +254,19 @@ class ILTagHeaderTest {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_SIZE, out);
+				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE, out);
 			}
 			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
 			ILTagHeader h = ILTagHeader.deserializeHeader(in);
 			assertEquals(id, h.tagId);
-			assertEquals(ILTag.MAX_TAG_SIZE, h.valueSize);
+			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
 
 		for (long id : SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_SIZE + 1, out);
+				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE + 1, out);
 			}
 			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
 			assertThrows(TagTooLargeException.class, () -> {
