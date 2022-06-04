@@ -33,103 +33,248 @@ package io.il2.iltags.io;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.EOFException;
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
 
 class LimitedDataInputTest {
 
-	@Test
-	void testLimitedDataInput() {
+	private static final byte[] SAMPLE = { (byte) 0x00, (byte) 0x01, (byte) 0x02, (byte) 0x03, (byte) 0x04, (byte) 0x05,
+			(byte) 0x06, (byte) 0x07, (byte) 0x08, (byte) 0x09, (byte) 0x0A, (byte) 0x0B, (byte) 0x0C, (byte) 0x0D,
+			(byte) 0x0E, (byte) 0x0F };
 
+	@Test
+	void testLimitedDataInput() throws Exception {
+		ByteBufferDataInput src = new ByteBufferDataInput(SAMPLE);
+		LimitedDataInput in = new LimitedDataInput(src, 10);
+		assertSame(src, in.source);
+		assertEquals(10, in.remaining());
 	}
 
 	@Test
-	void testUpdateRead() {
-		fail("Not yet implemented");
+	void testUpdateRead() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 10);
+
+		assertEquals(10, in.remaining());
+		in.updateRead(0);
+		assertEquals(10, in.remaining());
+		in.updateRead(4);
+		assertEquals(6, in.remaining());
+		in.updateRead(4);
+		assertEquals(2, in.remaining());
+		assertThrows(EOFException.class, () -> {
+			in.updateRead(3);
+		});
+		in.updateRead(2);
+		assertEquals(0, in.remaining());
+		in.updateRead(0);
+		assertThrows(EOFException.class, () -> {
+			in.updateRead(1);
+		});
 	}
 
 	@Test
 	void testRemaining() {
-		fail("Not yet implemented");
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 2);
+
+		assertTrue(in.hasRemaining());
+		assertEquals(2, in.remaining());
+
+		in.size = 1;
+		assertTrue(in.hasRemaining());
+		assertEquals(1, in.remaining());
+
+		in.size = 0;
+		assertFalse(in.hasRemaining());
+		assertEquals(0, in.remaining());
 	}
 
 	@Test
-	void testHasRemaining() {
-		fail("Not yet implemented");
+	void testReadFullyByteArray() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 11);
+
+		byte[] r = new byte[5];
+		byte[] exp = new byte[5];
+		in.readFully(r);
+		System.arraycopy(SAMPLE, 0, exp, 0, 5);
+		assertArrayEquals(exp, r);
+
+		in.readFully(r);
+		System.arraycopy(SAMPLE, 5, exp, 0, 5);
+		assertArrayEquals(exp, r);
+
+		assertThrows(EOFException.class, () -> {
+			in.readFully(r);
+		});
 	}
 
 	@Test
-	void testReadFullyByteArray() {
-		fail("Not yet implemented");
+	void testReadFullyByteArrayIntInt() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 11);
+
+		byte[] r = new byte[10];
+		byte[] exp = new byte[10];
+
+		in.readFully(r, 0, 5);
+		System.arraycopy(SAMPLE, 0, exp, 0, 5);
+		assertArrayEquals(exp, r);
+
+		in.readFully(r, 5, 5);
+		System.arraycopy(SAMPLE, 5, exp, 5, 5);
+		assertArrayEquals(exp, r);
+
+		assertThrows(EOFException.class, () -> {
+			in.readFully(r, 5, 5);
+		});
+		in.size = 0;
+		assertThrows(EOFException.class, () -> {
+			in.readFully(r, 5, 5);
+		});
+		in.readFully(r, 5, 0);
+		assertArrayEquals(exp, r);
 	}
 
 	@Test
-	void testReadFullyByteArrayIntInt() {
-		fail("Not yet implemented");
+	void testSkipBytes() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 11);
+		assertEquals(5, in.skipBytes(5));
+		assertEquals(5, in.readByte());
+		assertEquals(5, in.skipBytes(10));
+		assertEquals(0, in.skipBytes(10));
 	}
 
 	@Test
-	void testSkipBytes() {
-		fail("Not yet implemented");
+	void testReadBoolean() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 2);
+
+		assertFalse(in.readBoolean());
+		assertTrue(in.readBoolean());
+		assertThrows(EOFException.class, () -> {
+			in.readBoolean();
+		});
 	}
 
 	@Test
-	void testReadBoolean() {
-		fail("Not yet implemented");
+	void testReadByte() throws Exception {
+		LimitedDataInput in = new LimitedDataInput(
+				new ByteBufferDataInput(new byte[] { (byte) 0x01, (byte) 0xFF, (byte) 0x00 }), 2);
+
+		assertEquals(1, in.readByte());
+		assertEquals(-1, in.readByte());
+		assertThrows(EOFException.class, () -> {
+			in.readByte();
+		});
 	}
 
 	@Test
-	void testReadByte() {
-		fail("Not yet implemented");
+	void testReadUnsignedByte() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(
+				new ByteBufferDataInput(new byte[] { (byte) 0x01, (byte) 0xFF, (byte) 0x00 }), 2);
+
+		assertEquals(0x01, in.readUnsignedByte());
+		assertEquals(0xFF, in.readUnsignedByte());
+		assertThrows(EOFException.class, () -> {
+			in.readUnsignedByte();
+		});
 	}
 
 	@Test
-	void testReadUnsignedByte() {
-		fail("Not yet implemented");
+	void testReadShort() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(
+				new ByteBufferDataInput(new byte[] { (byte) 0x00, (byte) 0x01, (byte) 0xFF, (byte) 0x00, (byte) 0x00 }),
+				4);
+
+		assertEquals(1, in.readShort());
+		assertEquals(-256, in.readShort());
+		assertThrows(EOFException.class, () -> {
+			in.readShort();
+		});
 	}
 
 	@Test
-	void testReadShort() {
-		fail("Not yet implemented");
+	void testReadUnsignedShort() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(
+				new ByteBufferDataInput(new byte[] { (byte) 0x00, (byte) 0x01, (byte) 0xFF, (byte) 0x00, (byte) 0x00 }),
+				4);
+
+		assertEquals(1, in.readUnsignedShort());
+		assertEquals(0xFF00, in.readUnsignedShort());
+		assertThrows(EOFException.class, () -> {
+			in.readUnsignedShort();
+		});
 	}
 
 	@Test
-	void testReadUnsignedShort() {
-		fail("Not yet implemented");
+	void testReadChar() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(
+				new ByteBufferDataInput(new byte[] { (byte) 0x00, (byte) 0x01, (byte) 0xFF, (byte) 0x00, (byte) 0x00 }),
+				4);
+
+		assertEquals((char) 0x0001, in.readChar());
+		assertEquals((char) 0xFF00, in.readChar());
+		assertThrows(EOFException.class, () -> {
+			in.readChar();
+		});
 	}
 
 	@Test
-	void testReadChar() {
-		fail("Not yet implemented");
+	void testReadInt() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 8);
+
+		assertEquals(0x00010203, in.readInt());
+		assertEquals(0x04050607, in.readInt());
+		assertThrows(EOFException.class, () -> {
+			in.readInt();
+		});
 	}
 
 	@Test
-	void testReadInt() {
-		fail("Not yet implemented");
+	void testReadLong() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 16);
+
+		assertEquals(0x00010203_04050607l, in.readLong());
+		assertEquals(0x08090a0b_0c0d0e0fl, in.readLong());
+		assertThrows(EOFException.class, () -> {
+			in.readLong();
+		});
 	}
 
 	@Test
-	void testReadLong() {
-		fail("Not yet implemented");
+	void testReadFloat() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 8);
+
+		assertEquals(9.25571648671185E-41, in.readFloat());
+		assertEquals(1.5636842486455404E-36, in.readFloat());
+		assertThrows(EOFException.class, () -> {
+			in.readFloat();
+		});
 	}
 
 	@Test
-	void testReadFloat() {
-		fail("Not yet implemented");
+	void testReadDouble() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 16);
+
+		assertEquals(1.40159977307889E-309, in.readDouble());
+		assertEquals(5.924543410270741E-270, in.readDouble());
+		assertThrows(EOFException.class, () -> {
+			in.readDouble();
+		});
 	}
 
 	@Test
-	void testReadDouble() {
-		fail("Not yet implemented");
+	void testReadLine() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 16);
+		assertThrows(UnsupportedOperationException.class, () -> {
+			in.readLine();
+		});
 	}
 
 	@Test
-	void testReadLine() {
-		fail("Not yet implemented");
+	void testReadUTF() throws IOException {
+		LimitedDataInput in = new LimitedDataInput(new ByteBufferDataInput(SAMPLE), 16);
+		assertThrows(UnsupportedOperationException.class, () -> {
+			in.readUTF();
+		});
 	}
-
-	@Test
-	void testReadUTF() {
-		fail("Not yet implemented");
-	}
-
 }
