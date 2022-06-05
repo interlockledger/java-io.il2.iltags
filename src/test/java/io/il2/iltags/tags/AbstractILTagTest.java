@@ -171,17 +171,4 @@ class AbstractILTagTest {
 		}
 		assertArrayEquals(bOut.toByteArray(), t.toBytes());
 	}
-
-	@Test
-	void testAssertTagSizeLimit() throws Exception {
-		AbstractILTag.assertTagSizeLimit(0);
-		AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_VALUE_SIZE);
-
-		assertThrows(TagTooLargeException.class, () -> {
-			AbstractILTag.assertTagSizeLimit(ILTag.MAX_TAG_VALUE_SIZE + 1);
-		});
-		assertThrows(TagTooLargeException.class, () -> {
-			AbstractILTag.assertTagSizeLimit(-1);
-		});
-	}
 }

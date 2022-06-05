@@ -35,11 +35,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import io.il2.iltags.ilint.ILIntDecoder;
 import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.tags.AbstractILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 
 /**
@@ -77,7 +77,7 @@ public class ILIntTag extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		this.value = ILIntDecoder.decode(in);
+		this.value = ILTagUtils.readILInt(in, "Invalid value.");
 	}
 
 	/**

@@ -36,56 +36,91 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import io.il2.iltags.ilint.ILIntEncoder;
+import io.il2.iltags.io.LimitedDataInput;
 import io.il2.iltags.tags.AbstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 
 /**
- * This class implements the signed ILInt tag.
+ * This class implements the ILInt array tag. If the value is null, it will be
+ * treated as zero.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.30
+ * @since 2022.06.05
  */
-public class SignedILIntTag extends AbstractILTag {
+public class ILIntArrayTag extends AbstractILTag {
 
-	protected long value;
+	protected long[] values;
 
-	public SignedILIntTag(long tagId) {
+	public ILIntArrayTag(long tagId) {
 		super(tagId);
 	}
 
-	public long getValue() {
-		return value;
+	public long[] getValues() {
+		return values;
 	}
 
-	public void setValue(long value) {
-		this.value = value;
+	public void setValues(long[] values) {
+		this.values = values;
 	}
 
 	@Override
 	public long getValueSize() {
-		return ILIntEncoder.signedEncodedSize(value);
+		if (values != null) {
+			long size = ILIntEncoder.encodedSize(values.length);
+			for (long v : values) {
+				size += ILIntEncoder.encodedSize(v);
+			}
+			return size;
+		} else {
+			return 1;
+		}
 	}
 
 	@Override
 	public void serializeValue(DataOutput out) throws IOException {
-		ILIntEncoder.encodeSigned(value, out);
+		if (values != null) {
+			ILIntEncoder.encode(values.length, out);
+			for (long v : values) {
+				ILIntEncoder.encode(v, out);
+			}
+		} else {
+			out.writeByte(0);
+		}
+	}
+
+	protected void deserializeValueCore(LimitedDataInput in) throws IOException, ILTagException {
+		long count = ILTagUtils.readILInt(in, "Invalid counter.");
+		ILTagUtils.assertArraySize(count, 1, in.remaining());
+		this.values = new long[(int) count];
+		for (int i = 0; i < (int) count; i++) {
+			this.values[i] = ILTagUtils.readILInt(in, "Invalid value entry.");
+		}
 	}
 
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		this.value = ILTagUtils.readSignedILInt(in, "Invalid value.");
+		ILTagUtils.assertTagSizeLimit(valueSize);
+		if (valueSize < 1) {
+			throw new CorruptedTagException("Invalid ILInt array.");
+		}
+		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
+		deserializeValueCore(limitedInput);
+		if (limitedInput.hasRemaining()) {
+			throw new CorruptedTagException("Bad value size.");
+		}
 	}
 
 	/**
-	 * Creates the standard signed ILInt tag.
+	 * Creates the standard ILInt array tag.
 	 * 
 	 * @return The standard tag.
 	 */
-	public static SignedILIntTag createStandard() {
-		return new SignedILIntTag(TagID.IL_SIGNED_ILINT_TAG_ID);
+	public static ILIntArrayTag createStandard() {
+		return new ILIntArrayTag(TagID.IL_ILINTARRAY_TAG_ID);
 	}
 }

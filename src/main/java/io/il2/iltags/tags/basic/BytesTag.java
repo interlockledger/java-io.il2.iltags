@@ -38,6 +38,7 @@ import java.io.IOException;
 import io.il2.iltags.tags.AbstractILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 
 /**
@@ -81,7 +82,7 @@ public class BytesTag extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		assertTagSizeLimit(valueSize);
+		ILTagUtils.assertTagSizeLimit(valueSize);
 		value = new byte[(int) valueSize];
 		in.readFully(value);
 	}

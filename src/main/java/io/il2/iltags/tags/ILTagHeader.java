@@ -35,7 +35,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import io.il2.iltags.ilint.ILIntDecoder;
 import io.il2.iltags.ilint.ILIntEncoder;
 
 /**
@@ -73,6 +72,15 @@ public class ILTagHeader {
 	public ILTagHeader(long tagId, long valueSize) {
 		this.tagId = tagId;
 		this.valueSize = valueSize;
+	}
+
+	/**
+	 * Returns true if the tag is implicit.
+	 * 
+	 * @return true if the tag is implicit or false otherwise.
+	 */
+	public boolean isImplicit() {
+		return TagID.isImplicit(tagId);
 	}
 
 	/**
@@ -133,20 +141,11 @@ public class ILTagHeader {
 	 * @throws ILTagException In case the header is corrupted.
 	 */
 	public void deserialize(DataInput in) throws IOException, ILTagException {
-		try {
-			this.tagId = ILIntDecoder.decode(in);
-		} catch (IllegalArgumentException e) {
-			throw new CorruptedTagException("Invalid tag id.");
-		}
+		this.tagId = ILTagUtils.readILInt(in, "Invalid tag id.");
 		if (TagID.isImplicit(this.tagId)) {
 			this.valueSize = TagID.getImplicitValueSize(this.tagId);
 		} else {
-			try {
-				this.valueSize = ILIntDecoder.decode(in);
-				AbstractILTag.assertTagSizeLimit(this.valueSize);
-			} catch (IllegalArgumentException e) {
-				throw new CorruptedTagException("Invalid tag value size.");
-			}
+			this.valueSize = ILTagUtils.readILInt(in, "Invalid tag value size.");
 		}
 	}
 

@@ -89,7 +89,7 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 
 	@Override
 	public ILTag deserialize(DataInput in) throws IOException, ILTagException {
-		ILTagHeader header = ILTagHeader.deserializeHeader(in);
+		ILTagHeader header = ILTagUtils.readHeader(in);
 		ILTag tag = this.createTag(header.tagId);
 		deserializeValue(tag, header.valueSize, in);
 		return tag;
@@ -97,7 +97,7 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 
 	@Override
 	public ILTag deserialize(long id, DataInput in) throws IOException, ILTagException {
-		ILTagHeader header = ILTagHeader.deserializeHeader(in);
+		ILTagHeader header = ILTagUtils.readHeader(in);
 		if (header.tagId != id) {
 			throw new UnexpectedTagException(String.format("Expecting %1$X but found %2$X.", header.tagId, id));
 		}
@@ -108,7 +108,7 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 
 	@Override
 	public void deserializeInto(ILTag tag, DataInput in) throws IOException, ILTagException {
-		ILTagHeader header = ILTagHeader.deserializeHeader(in);
+		ILTagHeader header = ILTagUtils.readHeader(in);
 		if (header.tagId != tag.getTagID()) {
 			throw new UnexpectedTagException(
 					String.format("Expecting %1$X but found %2$X.", header.tagId, tag.getTagID()));

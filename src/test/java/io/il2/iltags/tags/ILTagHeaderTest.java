@@ -202,18 +202,6 @@ class ILTagHeaderTest {
 			assertEquals(id, h.tagId);
 			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
-
-		for (long id : TestUtils.SAMPLE_IDS) {
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-			try (DataOutputStream out = new DataOutputStream(bOut)) {
-				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE + 1, out);
-			}
-			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
-			assertThrows(TagTooLargeException.class, () -> {
-				h.deserialize(in);
-			});
-		}
 	}
 
 	@Test
@@ -257,18 +245,19 @@ class ILTagHeaderTest {
 			assertEquals(id, h.tagId);
 			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
+	}
 
-		for (long id : TestUtils.SAMPLE_IDS) {
-			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-			try (DataOutputStream out = new DataOutputStream(bOut)) {
-				ILIntEncoder.encode(id, out);
-				ILIntEncoder.encode(ILTag.MAX_TAG_VALUE_SIZE + 1, out);
-			}
-			ByteBufferDataInput in = new ByteBufferDataInput(ByteBuffer.wrap(bOut.toByteArray()));
-			assertThrows(TagTooLargeException.class, () -> {
-				ILTagHeader.deserializeHeader(in);
-			});
+	@Test
+	void testIsImplicit() {
+		ILTagHeader h = new ILTagHeader();
+		for (long i = 0; i < 16; i++) {
+			h.tagId = i;
+			assertTrue(h.isImplicit());
 		}
+		h.tagId = -1;
+		assertFalse(h.isImplicit());
+		h.tagId = 16;
+		assertFalse(h.isImplicit());
 	}
 
 }

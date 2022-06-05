@@ -44,6 +44,7 @@ import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.ILTagHeader;
+import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 import io.il2.iltags.tags.UnexpectedTagException;
 import io.il2.iltags.utils.UTF8Utils;
@@ -91,7 +92,7 @@ public class StringTag extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		assertTagSizeLimit(valueSize);
+		ILTagUtils.assertTagSizeLimit(valueSize);
 		value = readUTF8String((int) valueSize, in);
 	}
 
@@ -190,7 +191,7 @@ public class StringTag extends AbstractILTag {
 	 */
 	public static String deserializeStringTag(long id, DataInput in)
 			throws IOException, UnexpectedTagException, ILTagException {
-		ILTagHeader header = ILTagHeader.deserializeHeader(in);
+		ILTagHeader header = ILTagUtils.readHeader(in);
 		if (header.tagId != id) {
 			throw new UnexpectedTagException(
 					String.format("Expecting string tag with id %1$X but found %2$X.", id, header.tagId));

@@ -29,72 +29,85 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.il2.iltags.tags;
+package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
-import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.tags.AbstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTagException;
+import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.ILTagUtils;
+import io.il2.iltags.tags.TagID;
 
 /**
- * This abstract class implements the basic functionality of the tags.
+ * This class implements the big decimal tag. If the value is null, it will be
+ * treated as zero.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * @since 2022.06.05
  */
-public abstract class AbstractILTag implements ILTag {
+public class BigDecTag extends AbstractILTag {
 
-	private final long tagId;
+	protected BigDecimal value;
+
+	public BigDecTag(long tagId) {
+		super(tagId);
+	}
+
+	public BigDecimal getValue() {
+		return value;
+	}
+
+	public void setValue(BigDecimal value) {
+		this.value = value;
+	}
+
+	@Override
+	public long getValueSize() {
+		if (value != null) {
+			return 4 + (value.unscaledValue().bitLength() + 8) / 8;
+		} else {
+			return 4 + 1;
+		}
+	}
+
+	@Override
+	public void serializeValue(DataOutput out) throws IOException {
+		if (value != null) {
+			out.writeInt(value.scale());
+			byte[] tmp = value.unscaledValue().toByteArray();
+			out.write(tmp);
+		} else {
+			out.writeInt(0);
+			out.writeByte(0);
+		}
+	}
+
+	@Override
+	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
+			throws IOException, ILTagException {
+		ILTagUtils.assertTagSizeLimit(valueSize);
+		if (valueSize < (4 + 1)) {
+			throw new CorruptedTagException("Invalid big decimal value.");
+		}
+		int scale = in.readInt();
+		byte[] tmp = new byte[(int) (valueSize - 4)];
+		in.readFully(tmp);
+		BigInteger unscaled = new BigInteger(tmp);
+		value = new BigDecimal(unscaled, scale);
+	}
 
 	/**
-	 * Creates a new instance of this class.
+	 * Creates the standard big integer tag.
 	 * 
-	 * @param tagId The specified tag id.
+	 * @return The standard tag.
 	 */
-	protected AbstractILTag(long tagId) {
-		this.tagId = tagId;
-	}
-
-	@Override
-	public long getTagID() {
-		return this.tagId;
-	}
-
-	@Override
-	public boolean isImplicit() {
-		return TagID.isImplicit(tagId);
-	}
-
-	@Override
-	public boolean isReserved() {
-		return TagID.isReserved(tagId);
-	}
-
-	@Override
-	public long getTagSize() {
-		long valueSize = this.getValueSize();
-		return ILTagHeader.getSerializedSize(getTagID(), valueSize) + valueSize;
-	}
-
-	@Override
-	public void serialize(DataOutput out) throws IOException, ILTagException {
-		ILTagHeader.serialize(getTagID(), getValueSize(), out);
-		serializeValue(out);
-	}
-
-	@Override
-	public byte[] toBytes() throws ILTagException {
-		ILTagUtils.assertTagSizeLimit(getValueSize());
-		long size = getTagSize();
-		ByteBuffer buff = ByteBuffer.allocate((int) size);
-		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
-		try {
-			serialize(out);
-		} catch (IOException e) {
-			throw new ILTagException("Unable to serialize this tag. The tag implementation may be be incorrect.", e);
-		}
-		return buff.array();
+	public static BigDecTag createStandard() {
+		return new BigDecTag(TagID.IL_BDEC_TAG_ID);
 	}
 }

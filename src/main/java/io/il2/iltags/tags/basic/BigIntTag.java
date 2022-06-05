@@ -29,72 +29,80 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.il2.iltags.tags;
+package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.math.BigInteger;
 
-import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.tags.AbstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTagException;
+import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.ILTagUtils;
+import io.il2.iltags.tags.TagID;
 
 /**
- * This abstract class implements the basic functionality of the tags.
+ * This class implements the big integer tag. If the value is null, it will be
+ * treated as zero.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * @since 2022.06.05
  */
-public abstract class AbstractILTag implements ILTag {
+public class BigIntTag extends AbstractILTag {
 
-	private final long tagId;
+	protected BigInteger value;
+
+	public BigIntTag(long tagId) {
+		super(tagId);
+	}
+
+	public BigInteger getValue() {
+		return value;
+	}
+
+	public void setValue(BigInteger value) {
+		this.value = value;
+	}
+
+	@Override
+	public long getValueSize() {
+		if (value != null) {
+			return (value.bitLength() + 8) / 8;
+		} else {
+			return 1;
+		}
+	}
+
+	@Override
+	public void serializeValue(DataOutput out) throws IOException {
+		if (value != null) {
+			byte[] tmp = value.toByteArray();
+			out.write(tmp);
+		} else {
+			out.writeByte(0);
+		}
+	}
+
+	@Override
+	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
+			throws IOException, ILTagException {
+		ILTagUtils.assertTagSizeLimit(valueSize);
+		if (valueSize < 1) {
+			throw new CorruptedTagException("Invalid big integer value.");
+		}
+		byte[] tmp = new byte[(int) valueSize];
+		in.readFully(tmp);
+		value = new BigInteger(tmp);
+	}
 
 	/**
-	 * Creates a new instance of this class.
+	 * Creates the standard big integer tag.
 	 * 
-	 * @param tagId The specified tag id.
+	 * @return The standard tag.
 	 */
-	protected AbstractILTag(long tagId) {
-		this.tagId = tagId;
-	}
-
-	@Override
-	public long getTagID() {
-		return this.tagId;
-	}
-
-	@Override
-	public boolean isImplicit() {
-		return TagID.isImplicit(tagId);
-	}
-
-	@Override
-	public boolean isReserved() {
-		return TagID.isReserved(tagId);
-	}
-
-	@Override
-	public long getTagSize() {
-		long valueSize = this.getValueSize();
-		return ILTagHeader.getSerializedSize(getTagID(), valueSize) + valueSize;
-	}
-
-	@Override
-	public void serialize(DataOutput out) throws IOException, ILTagException {
-		ILTagHeader.serialize(getTagID(), getValueSize(), out);
-		serializeValue(out);
-	}
-
-	@Override
-	public byte[] toBytes() throws ILTagException {
-		ILTagUtils.assertTagSizeLimit(getValueSize());
-		long size = getTagSize();
-		ByteBuffer buff = ByteBuffer.allocate((int) size);
-		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
-		try {
-			serialize(out);
-		} catch (IOException e) {
-			throw new ILTagException("Unable to serialize this tag. The tag implementation may be be incorrect.", e);
-		}
-		return buff.array();
+	public static BigIntTag createStandard() {
+		return new BigIntTag(TagID.IL_BINT_TAG_ID);
 	}
 }
