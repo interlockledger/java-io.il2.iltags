@@ -45,91 +45,73 @@ import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 
 /**
- * This class implements the ILInt array tag and the OID tag. If values is null,
- * it will be treated as zero length array.
+ * This class implements the range tag.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.06.05
+ * @since 2022.05.30
  */
-public class ILIntArrayTag extends AbstractILTag {
+public class RangeTag extends AbstractILTag {
 
-	protected long[] values;
+	protected long first;
 
-	public ILIntArrayTag(long tagId) {
+	protected int count;
+
+	public RangeTag(long tagId) {
 		super(tagId);
 	}
 
-	public long[] getValues() {
-		return values;
+	public long getFirst() {
+		return first;
 	}
 
-	public void setValues(long[] values) {
-		this.values = values;
+	public void setFirst(long first) {
+		this.first = first;
+	}
+
+	public int getCount() {
+		return count;
+	}
+
+	/**
+	 * Sets the count. Only the 16 least significant bits will be considered.
+	 * 
+	 * @param count The count.
+	 */
+	public void setCount(int count) {
+		this.count = count & 0xFFFF;
 	}
 
 	@Override
 	public long getValueSize() {
-		if (values != null) {
-			long size = ILIntEncoder.encodedSize(values.length);
-			for (long v : values) {
-				size += ILIntEncoder.encodedSize(v);
-			}
-			return size;
-		} else {
-			return 1;
-		}
+		return ILIntEncoder.encodedSize(first) + 2;
 	}
 
 	@Override
 	public void serializeValue(DataOutput out) throws IOException {
-		if (values != null) {
-			ILIntEncoder.encode(values.length, out);
-			for (long v : values) {
-				ILIntEncoder.encode(v, out);
-			}
-		} else {
-			out.writeByte(0);
-		}
-	}
-
-	protected void deserializeValueCore(LimitedDataInput in) throws IOException, ILTagException {
-		long count = ILTagUtils.readILInt(in, "Invalid counter.");
-		ILTagUtils.assertArraySize(count, 1, in.remaining());
-		this.values = new long[(int) count];
-		for (int i = 0; i < (int) count; i++) {
-			this.values[i] = ILTagUtils.readILInt(in, "Invalid value entry.");
-		}
+		ILIntEncoder.encode(first, out);
+		out.writeShort(count);
 	}
 
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		ILTagUtils.assertTagSizeLimit(valueSize);
-		if (valueSize < 1) {
-			throw new CorruptedTagException("Invalid ILInt array.");
+		if ((valueSize < 3) || (valueSize > 11)) {
+			throw new CorruptedTagException("Corrupted range tag.");
 		}
-		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(limitedInput);
-		if (limitedInput.hasRemaining()) {
-			throw new CorruptedTagException("Bad value size.");
+		LimitedDataInput limited = new LimitedDataInput(in, (int) valueSize);
+		this.first = ILTagUtils.readILInt(limited, "Invalid value.");
+		this.count = in.readUnsignedShort();
+		if (limited.hasRemaining()) {
+			throw new CorruptedTagException("Corrupted range tag. Too many bytes.");
 		}
 	}
 
 	/**
-	 * Creates the standard ILInt array tag.
+	 * Creates the standard range tag.
 	 * 
 	 * @return The standard tag.
 	 */
-	public static ILIntArrayTag createStandard() {
-		return new ILIntArrayTag(TagID.IL_ILINTARRAY_TAG_ID);
-	}
-
-	/**
-	 * Creates the standard OID tag tag.
-	 * 
-	 * @return The standard tag.
-	 */
-	public static ILIntArrayTag createStandardOIDTag() {
-		return new ILIntArrayTag(TagID.IL_OID_TAG_ID);
+	public static RangeTag createStandard() {
+		return new RangeTag(TagID.IL_RANGE_TAG_ID);
 	}
 }

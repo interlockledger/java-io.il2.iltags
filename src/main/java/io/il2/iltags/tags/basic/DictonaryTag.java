@@ -34,45 +34,49 @@ package io.il2.iltags.tags.basic;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.LimitedDataInput;
 import io.il2.iltags.tags.AbstractILTag;
 import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
 
 /**
- * This class implements the ILInt array tag and the OID tag. If values is null,
- * it will be treated as zero length array.
+ * This class implements the dictionary tag. It maps strings to ILTag instances.
+ * All keys associated with null will be serialized as standard null tags.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.06.05
  */
-public class ILIntArrayTag extends AbstractILTag {
+public class DictonaryTag extends AbstractILTag {
 
-	protected long[] values;
+	protected Map<String, ILTag> values = new LinkedHashMap<>();
 
-	public ILIntArrayTag(long tagId) {
+	public DictonaryTag(long tagId) {
 		super(tagId);
 	}
 
-	public long[] getValues() {
+	public Map<String, ILTag> getValues() {
 		return values;
-	}
-
-	public void setValues(long[] values) {
-		this.values = values;
 	}
 
 	@Override
 	public long getValueSize() {
 		if (values != null) {
-			long size = ILIntEncoder.encodedSize(values.length);
-			for (long v : values) {
-				size += ILIntEncoder.encodedSize(v);
+			long size = ILIntEncoder.encodedSize(values.size());
+			for (Map.Entry<String, ILTag> e : values.entrySet()) {
+				size += StringTag.getStandardStringTagSize(e.getKey());
+				if (e.getValue() != null) {
+					size += e.getValue().getTagSize();
+				} else {
+					size += 1;
+				}
 			}
 			return size;
 		} else {
@@ -83,21 +87,24 @@ public class ILIntArrayTag extends AbstractILTag {
 	@Override
 	public void serializeValue(DataOutput out) throws IOException {
 		if (values != null) {
-			ILIntEncoder.encode(values.length, out);
-			for (long v : values) {
-				ILIntEncoder.encode(v, out);
+			ILIntEncoder.encode(values.size(), out);
+			for (Map.Entry<String, ILTag> e : values.entrySet()) {
+				StringTag.serializeStandardStringTag(e.getKey(), out);
+				ILTagUtils.writeTagOrNull(e.getValue(), out);
 			}
 		} else {
 			out.writeByte(0);
 		}
 	}
 
-	protected void deserializeValueCore(LimitedDataInput in) throws IOException, ILTagException {
+	protected void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
 		long count = ILTagUtils.readILInt(in, "Invalid counter.");
-		ILTagUtils.assertArraySize(count, 1, in.remaining());
-		this.values = new long[(int) count];
+		ILTagUtils.assertArraySize(count, 1 + 1 + 1, in.remaining());
+		this.values.clear();
 		for (int i = 0; i < (int) count; i++) {
-			this.values[i] = ILTagUtils.readILInt(in, "Invalid value entry.");
+			String key = StringTag.deserializeStandardStringTag(in);
+			ILTag value = factory.deserialize(in);
+			this.values.put(key, value);
 		}
 	}
 
@@ -106,30 +113,21 @@ public class ILIntArrayTag extends AbstractILTag {
 			throws IOException, ILTagException {
 		ILTagUtils.assertTagSizeLimit(valueSize);
 		if (valueSize < 1) {
-			throw new CorruptedTagException("Invalid ILInt array.");
+			throw new CorruptedTagException("Invalid dictionary tag.");
 		}
 		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(limitedInput);
+		deserializeValueCore(factory, limitedInput);
 		if (limitedInput.hasRemaining()) {
 			throw new CorruptedTagException("Bad value size.");
 		}
 	}
 
 	/**
-	 * Creates the standard ILInt array tag.
+	 * Creates the standard dictionary tag.
 	 * 
 	 * @return The standard tag.
 	 */
-	public static ILIntArrayTag createStandard() {
-		return new ILIntArrayTag(TagID.IL_ILINTARRAY_TAG_ID);
-	}
-
-	/**
-	 * Creates the standard OID tag tag.
-	 * 
-	 * @return The standard tag.
-	 */
-	public static ILIntArrayTag createStandardOIDTag() {
-		return new ILIntArrayTag(TagID.IL_OID_TAG_ID);
+	public static DictonaryTag createStandard() {
+		return new DictonaryTag(TagID.IL_DICTIONARY_TAG_ID);
 	}
 }

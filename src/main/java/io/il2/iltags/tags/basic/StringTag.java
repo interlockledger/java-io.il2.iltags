@@ -130,14 +130,18 @@ public class StringTag extends AbstractILTag {
 	}
 
 	/**
-	 * Computes the size of the string tag required to encode the given string.
+	 * Computes the size of the string tag required to encode the given string. If
+	 * value is null, it will be treated as "".
 	 * 
 	 * @param id    The tag id.
 	 * @param value The string value.
 	 * @return The size of the tag in bytes.
 	 */
 	public static long getStringTagSize(long id, CharSequence value) {
-		int valueSize = UTF8Utils.getEncodedSize(value);
+		int valueSize = 0;
+		if (value != null) {
+			valueSize = UTF8Utils.getEncodedSize(value);
+		}
 		return ILTagHeader.getSerializedSize(id, valueSize) + valueSize;
 	}
 
@@ -155,7 +159,8 @@ public class StringTag extends AbstractILTag {
 
 	/**
 	 * Serializes a string directly into a string tag with the given id. It is
-	 * equivalent to create a StringTag instance and serialize it.
+	 * equivalent to create a StringTag instance and serialize it. If value is null,
+	 * it will be treated as "".
 	 * 
 	 * @param id    The tag id.
 	 * @param value The string value.
@@ -163,8 +168,12 @@ public class StringTag extends AbstractILTag {
 	 * @throws IOException In case of error.
 	 */
 	public static void serializeStringTag(long id, CharSequence value, DataOutput out) throws IOException {
-		ILTagHeader.serialize(id, UTF8Utils.getEncodedSize(value), out);
-		writeUTF8String(value, out);
+		if (value != null) {
+			ILTagHeader.serialize(id, UTF8Utils.getEncodedSize(value), out);
+			writeUTF8String(value, out);
+		} else {
+			ILTagHeader.serialize(id, 0, out);
+		}
 	}
 
 	/**

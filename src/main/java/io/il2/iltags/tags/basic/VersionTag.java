@@ -29,71 +29,98 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.il2.iltags.tags;
+package io.il2.iltags.tags.basic;
 
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.tags.AbstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTagException;
+import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.TagID;
 
 /**
- * This abstract class implements the basic functionality of the tags.
+ * This class implements the version tag.
  * 
  * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * @since 2022.06.05
  */
-public abstract class AbstractILTag implements ILTag {
+public class VersionTag extends AbstractILTag {
 
-	private final long tagId;
+	protected int major;
+	protected int minor;
+	protected int revision;
+	protected int build;
+
+	public VersionTag(long tagId) {
+		super(tagId);
+	}
+
+	public int getMajor() {
+		return major;
+	}
+
+	public void setMajor(int major) {
+		this.major = major;
+	}
+
+	public int getMinor() {
+		return minor;
+	}
+
+	public void setMinor(int minor) {
+		this.minor = minor;
+	}
+
+	public int getRevision() {
+		return revision;
+	}
+
+	public void setRevision(int revision) {
+		this.revision = revision;
+	}
+
+	public int getBuild() {
+		return build;
+	}
+
+	public void setBuild(int build) {
+		this.build = build;
+	}
+
+	@Override
+	public long getValueSize() {
+		return 4 + 4 + 4 + 4;
+	}
+
+	@Override
+	public void serializeValue(DataOutput out) throws IOException {
+		out.writeInt(major);
+		out.writeInt(minor);
+		out.writeInt(revision);
+		out.writeInt(build);
+	}
+
+	@Override
+	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
+			throws IOException, ILTagException {
+		if (valueSize != 16) {
+			throw new CorruptedTagException("Invalid value size.");
+		}
+		major = in.readInt();
+		minor = in.readInt();
+		revision = in.readInt();
+		build = in.readInt();
+	}
 
 	/**
-	 * Creates a new instance of this class.
+	 * Creates the standard version tag.
 	 * 
-	 * @param tagId The specified tag id.
+	 * @return The standard tag.
 	 */
-	protected AbstractILTag(long tagId) {
-		this.tagId = tagId;
-	}
-
-	@Override
-	public long getTagID() {
-		return this.tagId;
-	}
-
-	@Override
-	public boolean isImplicit() {
-		return TagID.isImplicit(tagId);
-	}
-
-	@Override
-	public boolean isReserved() {
-		return TagID.isReserved(tagId);
-	}
-
-	@Override
-	public long getTagSize() {
-		long valueSize = this.getValueSize();
-		return ILTagHeader.getSerializedSize(getTagID(), valueSize) + valueSize;
-	}
-
-	@Override
-	public void serialize(DataOutput out) throws IOException, ILTagException {
-		ILTagHeader.serialize(getTagID(), getValueSize(), out);
-		serializeValue(out);
-	}
-
-	@Override
-	public byte[] toBytes() throws ILTagException {
-		ILTagUtils.assertTagSizeLimit(getValueSize());
-		long size = getTagSize();
-		ByteBuffer buff = ByteBuffer.allocate((int) size);
-		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
-		try {
-			serialize(out);
-		} catch (IOException e) {
-			throw new ILTagException("Unable to serialize this tag. The tag implementation may be be incorrect.", e);
-		}
-		return buff.array();
+	public static VersionTag createStandard() {
+		return new VersionTag(TagID.IL_VERSION_TAG_ID);
 	}
 }

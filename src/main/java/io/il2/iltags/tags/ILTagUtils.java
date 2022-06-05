@@ -32,6 +32,7 @@
 package io.il2.iltags.tags;
 
 import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import io.il2.iltags.ilint.ILIntDecoder;
@@ -129,6 +130,27 @@ public class ILTagUtils {
 		long totalSize = count * minUnitSize;
 		if (Long.compareUnsigned(totalSize, valueSize) > 0) {
 			throw new CorruptedTagException(String.format("%1$X bytes cannot hold %2$X entries.", valueSize, count));
+		}
+	}
+
+	/**
+	 * Serializes a tag. If tag is null, it will be serialized into a standard null
+	 * tag.
+	 * 
+	 * @param tag The tag.
+	 * @param out The data output.
+	 * @throws IOException In case of IO error.
+	 */
+	public static void writeTagOrNull(ILTag tag, DataOutput out) throws IOException {
+		if (tag != null) {
+			try {
+				tag.serialize(out);
+			} catch (ILTagException e) {
+				throw new IOException(String.format("Unable to serialize the tag %1$s.", tag.getClass().getName()), e);
+			}
+		} else {
+			// The standard null tag.
+			out.write(0);
 		}
 	}
 }
