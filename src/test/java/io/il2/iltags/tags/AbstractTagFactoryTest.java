@@ -34,20 +34,14 @@ package io.il2.iltags.tags;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
-import java.io.DataOutputStream;
-import java.nio.ByteBuffer;
-import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
-import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.tags.basic.BytesTag;
 import io.il2.iltags.tags.basic.ILIntTag;
 import io.il2.iltags.tags.basic.Int16Tag;
-import io.il2.iltags.tags.basic.Int32Tag;
 import io.il2.iltags.tags.basic.NullTag;
 
 class AbstractTagFactoryTest {
