@@ -38,7 +38,28 @@ import io.il2.iltags.tags.ILTag;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.TagID;
 import io.il2.iltags.tags.UnsupportedTagException;
+import io.il2.iltags.tags.basic.BigDecTag;
+import io.il2.iltags.tags.basic.BigIntTag;
+import io.il2.iltags.tags.basic.Binary128Tag;
+import io.il2.iltags.tags.basic.BooleanTag;
+import io.il2.iltags.tags.basic.BytesTag;
+import io.il2.iltags.tags.basic.DictonaryTag;
+import io.il2.iltags.tags.basic.DoubleTag;
+import io.il2.iltags.tags.basic.FloatTag;
+import io.il2.iltags.tags.basic.ILIntArrayTag;
+import io.il2.iltags.tags.basic.ILIntTag;
+import io.il2.iltags.tags.basic.ILTagArrayTag;
+import io.il2.iltags.tags.basic.ILTagSequenceTag;
+import io.il2.iltags.tags.basic.Int16Tag;
+import io.il2.iltags.tags.basic.Int32Tag;
+import io.il2.iltags.tags.basic.Int64Tag;
+import io.il2.iltags.tags.basic.Int8Tag;
 import io.il2.iltags.tags.basic.NullTag;
+import io.il2.iltags.tags.basic.RangeTag;
+import io.il2.iltags.tags.basic.SignedILIntTag;
+import io.il2.iltags.tags.basic.StringDictonaryTag;
+import io.il2.iltags.tags.basic.StringTag;
+import io.il2.iltags.tags.basic.VersionTag;
 
 /**
  * This class implements the ILTagFactory.
@@ -124,7 +145,58 @@ public class TagFactory extends AbstractTagFactory {
 		switch ((int) tagId) {
 		case (int) TagID.IL_NULL_TAG_ID:
 			return NullTag.createStandard();
-		// TODO Register other tags.
+		case (int) TagID.IL_BOOL_TAG_ID:
+			return BooleanTag.createStandard();
+		case (int) TagID.IL_INT8_TAG_ID:
+			return Int8Tag.createStandardSigned();
+		case (int) TagID.IL_UINT8_TAG_ID:
+			return Int8Tag.createStandardUnsigned();
+		case (int) TagID.IL_INT16_TAG_ID:
+			return Int16Tag.createStandardSigned();
+		case (int) TagID.IL_UINT16_TAG_ID:
+			return Int16Tag.createStandardUnsigned();
+		case (int) TagID.IL_INT32_TAG_ID:
+			return Int32Tag.createStandardSigned();
+		case (int) TagID.IL_UINT32_TAG_ID:
+			return Int32Tag.createStandardUnsigned();
+		case (int) TagID.IL_INT64_TAG_ID:
+			return Int64Tag.createStandardSigned();
+		case (int) TagID.IL_UINT64_TAG_ID:
+			return Int64Tag.createStandardUnsigned();
+		case (int) TagID.IL_ILINT_TAG_ID:
+			return ILIntTag.createStandard();
+		case (int) TagID.IL_BIN32_TAG_ID:
+			return FloatTag.createStandard();
+		case (int) TagID.IL_BIN64_TAG_ID:
+			return DoubleTag.createStandard();
+		case (int) TagID.IL_BIN128_TAG_ID:
+			return Binary128Tag.createStandard();
+		case (int) TagID.IL_SIGNED_ILINT_TAG_ID:
+			return SignedILIntTag.createStandard();
+		case (int) TagID.IL_BYTES_TAG_ID:
+			return BytesTag.createStandard();
+		case (int) TagID.IL_STRING_TAG_ID:
+			return StringTag.createStandard();
+		case (int) TagID.IL_BINT_TAG_ID:
+			return BigIntTag.createStandard();
+		case (int) TagID.IL_BDEC_TAG_ID:
+			return BigDecTag.createStandard();
+		case (int) TagID.IL_ILINTARRAY_TAG_ID:
+			return ILIntArrayTag.createStandard();
+		case (int) TagID.IL_ILTAGARRAY_TAG_ID:
+			return ILTagArrayTag.createStandard();
+		case (int) TagID.IL_ILTAGSEQ_TAG_ID:
+			return ILTagSequenceTag.createStandard();
+		case (int) TagID.IL_RANGE_TAG_ID:
+			return RangeTag.createStandard();
+		case (int) TagID.IL_VERSION_TAG_ID:
+			return VersionTag.createStandard();
+		case (int) TagID.IL_OID_TAG_ID:
+			return ILIntArrayTag.createStandardOIDTag();
+		case (int) TagID.IL_DICTIONARY_TAG_ID:
+			return DictonaryTag.createStandard();
+		case (int) TagID.IL_STRING_DICTIONARY_TAG_ID:
+			return StringDictonaryTag.createStandard();
 		default:
 			throw new UnsupportedTagException();
 		}
