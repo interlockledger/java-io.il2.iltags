@@ -49,7 +49,9 @@ import io.il2.iltags.tags.UnexpectedTagException;
 import io.il2.iltags.utils.UTF8Utils;
 
 /**
- * This class implements the string tag.
+ * This class implements the string tag. This implementation will threat null
+ * strings as empty strings during the tag serialization but will never leave
+ * the value as null during the deserialization of the class.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.06.02
@@ -101,8 +103,10 @@ public class StringTag extends AbstractILTag {
 	 * @throws IOException In case of IO error.
 	 */
 	protected static void writeUTF8String(CharSequence value, DataOutput out) throws IOException {
-		ByteBuffer enc = UTF8Utils.newEncoder().encode(CharBuffer.wrap(value));
-		out.write(enc.array(), 0, enc.limit());
+		if (value != null) {
+			ByteBuffer enc = UTF8Utils.newEncoder().encode(CharBuffer.wrap(value));
+			out.write(enc.array(), 0, enc.limit());
+		}
 	}
 
 	/**
