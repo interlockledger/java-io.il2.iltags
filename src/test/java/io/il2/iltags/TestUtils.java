@@ -40,6 +40,17 @@ import java.util.Random;
 
 public abstract class TestUtils {
 
+	/**
+	 * Sample Tag IDs with all 9 sizes. It does not include implicit IDs.
+	 */
+	public static final long[] SAMPLE_IDS = { 0x10, 0xFEl, 0xFEDCl, 0xFEDCBAl, 0xFEDCBA98l, 0xFEDCBA9876l,
+			0xFEDCBA987654l, 0xFEDCBA98765432l, 0xFEDCBA9876543210l };
+
+	/**
+	 * Sample value sizes up to the maximum accepted value size.
+	 */
+	public static final long[] SAMPLE_VALUE_SIZES = { 0x20L, 0x2000L, 0x200000L, 0x20000000L };
+
 	public static final Charset UTF8 = Charset.forName("utf8");
 
 	/**

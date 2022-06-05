@@ -39,15 +39,11 @@ import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
 
+import io.il2.iltags.TestUtils;
 import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataInput;
 
 class ILTagHeaderTest {
-
-	private static final long[] SAMPLE_IDS = { 0x10, 0xFEl, 0xFEDCl, 0xFEDCBAl, 0xFEDCBA98l, 0xFEDCBA9876l,
-			0xFEDCBA987654l, 0xFEDCBA98765432l, 0xFEDCBA9876543210l };
-
-	private static final long[] SAMPLE_SIZES = { 0x20L, 0x2000L, 0x200000L, 0x20000000L };
 
 	@Test
 	void testILTagHeader() {
@@ -71,8 +67,8 @@ class ILTagHeaderTest {
 			assertEquals(ILIntEncoder.encodedSize(id), h.getSerializedSize());
 		}
 		// Explicit
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_IDS) {
 				ILTagHeader h = new ILTagHeader(id, size);
 				assertEquals(ILIntEncoder.encodedSize(id) + ILIntEncoder.encodedSize(size), h.getSerializedSize());
 			}
@@ -86,8 +82,8 @@ class ILTagHeaderTest {
 			assertEquals(ILIntEncoder.encodedSize(id), ILTagHeader.getSerializedSize(id, -1));
 		}
 		// Explicit
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_IDS) {
 				assertEquals(ILIntEncoder.encodedSize(id) + ILIntEncoder.encodedSize(size),
 						ILTagHeader.getSerializedSize(id, size));
 			}
@@ -113,8 +109,8 @@ class ILTagHeaderTest {
 		}
 
 		// Implicit
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_IDS) {
 				ILTagHeader h = new ILTagHeader(id, size);
 
 				ByteArrayOutputStream bExp = new ByteArrayOutputStream();
@@ -148,8 +144,8 @@ class ILTagHeaderTest {
 		}
 
 		// Implicit
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_IDS) {
 				ByteArrayOutputStream bExp = new ByteArrayOutputStream();
 				try (DataOutputStream out = new DataOutputStream(bExp)) {
 					ILIntEncoder.encode(id, out);
@@ -181,8 +177,8 @@ class ILTagHeaderTest {
 		}
 
 		// General
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_SIZES) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_VALUE_SIZES) {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				try (DataOutputStream out = new DataOutputStream(bOut)) {
 					ILIntEncoder.encode(id, out);
@@ -195,7 +191,7 @@ class ILTagHeaderTest {
 			}
 		}
 
-		for (long id : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
@@ -207,7 +203,7 @@ class ILTagHeaderTest {
 			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
 
-		for (long id : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
@@ -236,8 +232,8 @@ class ILTagHeaderTest {
 		}
 
 		// General
-		for (long id : SAMPLE_IDS) {
-			for (long size : SAMPLE_SIZES) {
+		for (long id : TestUtils.SAMPLE_IDS) {
+			for (long size : TestUtils.SAMPLE_VALUE_SIZES) {
 				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 				try (DataOutputStream out = new DataOutputStream(bOut)) {
 					ILIntEncoder.encode(id, out);
@@ -250,7 +246,7 @@ class ILTagHeaderTest {
 			}
 		}
 
-		for (long id : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
@@ -262,7 +258,7 @@ class ILTagHeaderTest {
 			assertEquals(ILTag.MAX_TAG_VALUE_SIZE, h.valueSize);
 		}
 
-		for (long id : SAMPLE_IDS) {
+		for (long id : TestUtils.SAMPLE_IDS) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			try (DataOutputStream out = new DataOutputStream(bOut)) {
 				ILIntEncoder.encode(id, out);
