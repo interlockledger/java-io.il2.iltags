@@ -46,7 +46,11 @@ import io.il2.iltags.tags.UnexpectedTagException;
  */
 public class TagSequenceValidatorBuilder {
 
-	protected static final TagValidator NULL_TAG_VALIDATOR = new TagValidator() {
+	/**
+	 * This validator will accept null tags only. Both null and standard null tags
+	 * will be accepted.
+	 */
+	public static final TagValidator NULL_TAG_VALIDATOR = new TagValidator() {
 		@Override
 		public void validate(ILTag tag) throws UnexpectedTagException {
 			if ((tag != null) && (tag.getTagID() != TagID.IL_NULL_TAG_ID)) {
@@ -55,7 +59,7 @@ public class TagSequenceValidatorBuilder {
 		}
 	};
 
-	private ArrayList<TagValidator> validators = new ArrayList<>();
+	protected ArrayList<TagValidator> validators = new ArrayList<>();
 
 	/**
 	 * Creates a new instance of this class.
@@ -95,9 +99,11 @@ public class TagSequenceValidatorBuilder {
 	}
 
 	/**
-	 * Adds a custom validator.
+	 * Adds a custom validator. It is important to notice that the same instance may
+	 * be added multiple times as validators are expected to be thread safe once
+	 * ready for use.
 	 * 
-	 * @param tagIDs List of tags to be accepted.
+	 * @param validator The validator.
 	 * @return Returns this, allowing the chaining of methods during the build.
 	 */
 	public TagSequenceValidatorBuilder add(TagValidator validator) {

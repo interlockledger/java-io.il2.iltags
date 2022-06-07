@@ -32,39 +32,164 @@
 package io.il2.iltags.tags.validator;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
+
+import io.il2.iltags.tags.UnexpectedTagException;
+import io.il2.iltags.tags.basic.NullTag;
 
 class TagSequenceValidatorBuilderTest {
 
 	@Test
+	void testNULL_TAG_VALIDATOR() throws Exception {
+
+		TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR.validate(null);
+		TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR.validate(NullTag.createStandard());
+		assertThrows(UnexpectedTagException.class, () -> {
+			TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR.validate(new NullTag(1));
+		});
+	}
+
+	@Test
 	void testTagSequenceValidatorBuilder() {
-		fail("Not yet implemented");
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
+		assertEquals(0, b.validators.size());
 	}
 
 	@Test
 	void testAddNull() {
-		fail("Not yet implemented");
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
+
+		b.addNull();
+		assertEquals(1, b.validators.size());
+		assertSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(0));
+		b.add(false, 1);
+		b.addNull();
+		assertEquals(3, b.validators.size());
+		assertSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(0));
+		assertNotSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(1));
+		assertSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(2));
 	}
 
 	@Test
 	void testAddBooleanLong() {
-		fail("Not yet implemented");
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
+
+		b.add(true, 10);
+		assertEquals(1, b.validators.size());
+		assertInstanceOf(SingleIDTagValidator.class, b.validators.get(0));
+		SingleIDTagValidator v = (SingleIDTagValidator) b.validators.get(0);
+		assertTrue(v.isAcceptNull());
+		assertEquals(10, v.id);
+
+		b.addNull();
+		b.add(false, 11);
+		assertEquals(3, b.validators.size());
+		assertInstanceOf(SingleIDTagValidator.class, b.validators.get(0));
+		v = (SingleIDTagValidator) b.validators.get(0);
+		assertTrue(v.isAcceptNull());
+		assertEquals(10, v.id);
+
+		assertSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(1));
+
+		assertInstanceOf(SingleIDTagValidator.class, b.validators.get(2));
+		v = (SingleIDTagValidator) b.validators.get(2);
+		assertFalse(v.isAcceptNull());
+		assertEquals(11, v.id);
 	}
 
 	@Test
 	void testAddBooleanLongArray() {
-		fail("Not yet implemented");
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
+
+		b.add(true, 10, 11);
+		assertEquals(1, b.validators.size());
+		assertInstanceOf(MultiIDTagValidator.class, b.validators.get(0));
+		MultiIDTagValidator v = (MultiIDTagValidator) b.validators.get(0);
+		assertTrue(v.isAcceptNull());
+		assertArrayEquals(new long[] { 10, 11 }, v.ids);
+
+		b.addNull();
+		b.add(false, 12, 13, 14);
+		assertEquals(3, b.validators.size());
+		assertInstanceOf(MultiIDTagValidator.class, b.validators.get(0));
+		v = (MultiIDTagValidator) b.validators.get(0);
+		assertTrue(v.isAcceptNull());
+		assertArrayEquals(new long[] { 10, 11 }, v.ids);
+
+		assertSame(TagSequenceValidatorBuilder.NULL_TAG_VALIDATOR, b.validators.get(1));
+
+		assertInstanceOf(MultiIDTagValidator.class, b.validators.get(2));
+		v = (MultiIDTagValidator) b.validators.get(2);
+		assertFalse(v.isAcceptNull());
+		assertArrayEquals(new long[] { 12, 13, 14 }, v.ids);
 	}
 
 	@Test
 	void testAddTagValidator() {
-		fail("Not yet implemented");
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
+
+		TagValidator v1 = mock(TagValidator.class);
+		TagValidator v2 = mock(TagValidator.class);
+		TagValidator v3 = mock(TagValidator.class);
+
+		b.add(v1);
+		assertEquals(1, b.validators.size());
+		assertSame(v1, b.validators.get(0));
+
+		b.add(v2);
+		assertEquals(2, b.validators.size());
+		assertSame(v1, b.validators.get(0));
+		assertSame(v2, b.validators.get(1));
+
+		b.add(v3);
+		assertEquals(3, b.validators.size());
+		assertSame(v1, b.validators.get(0));
+		assertSame(v2, b.validators.get(1));
+		assertSame(v3, b.validators.get(2));
+
+		b.add(v1);
+		assertEquals(4, b.validators.size());
+		assertSame(v1, b.validators.get(0));
+		assertSame(v2, b.validators.get(1));
+		assertSame(v3, b.validators.get(2));
+		assertSame(v1, b.validators.get(3));
 	}
 
 	@Test
 	void testBuild() {
-		fail("Not yet implemented");
-	}
+		TagSequenceValidatorBuilder b = new TagSequenceValidatorBuilder();
 
+		TagValidator v1 = mock(TagValidator.class);
+		TagValidator v2 = mock(TagValidator.class);
+		TagValidator v3 = mock(TagValidator.class);
+		b.add(v1);
+		b.add(v2);
+
+		TagSequenceValidator va = b.build();
+		assertInstanceOf(TagSequenceValidatorImpl.class, va);
+		TagSequenceValidatorImpl va1 = (TagSequenceValidatorImpl) va;
+		assertNotSame(b.validators, va1.validators);
+		assertEquals(2, va1.validators.size());
+		assertSame(v1, va1.validators.get(0));
+		assertSame(v2, va1.validators.get(1));
+
+		// Ensure they are independent
+		b.add(v3);
+		TagSequenceValidator vb = b.build();
+		assertInstanceOf(TagSequenceValidatorImpl.class, vb);
+		TagSequenceValidatorImpl vb1 = (TagSequenceValidatorImpl) vb;
+
+		assertNotSame(b.validators, vb1.validators);
+		assertEquals(3, vb1.validators.size());
+		assertSame(v1, vb1.validators.get(0));
+		assertSame(v2, vb1.validators.get(1));
+		assertSame(v3, vb1.validators.get(2));
+
+		assertNotSame(b.validators, va1.validators);
+		assertEquals(2, va1.validators.size());
+		assertSame(v1, va1.validators.get(0));
+		assertSame(v2, va1.validators.get(1));
+	}
 }

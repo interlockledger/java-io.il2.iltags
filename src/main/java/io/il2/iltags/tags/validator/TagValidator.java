@@ -36,7 +36,8 @@ import io.il2.iltags.tags.UnexpectedTagException;
 
 /**
  * This is the interface of a tag validator. Once created and properly
- * configured instances of this class are expected to be thread safe.
+ * configured instances of classes which implements this interface are expected
+ * to be thread safe and immutable.
  * 
  * @author Fabio Jun Takada Chino
  * @since 2022.06.05
