@@ -34,8 +34,6 @@ package io.il2.iltags.tags.factory;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.math.BigDecimal;
-
 import org.junit.jupiter.api.Test;
 
 import io.il2.iltags.tags.ILTag;
