@@ -33,6 +33,7 @@ package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +46,7 @@ import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
 import io.il2.iltags.tags.ILTagUtils;
 import io.il2.iltags.tags.TagID;
+import io.il2.iltags.tags.UnexpectedTagException;
 
 /**
  * This class implements the string dictionary tag. It maps strings to ILTag
@@ -92,14 +94,18 @@ public class StringDictonaryTag extends AbstractILTag {
 		}
 	}
 
-	protected void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
+	private void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
 		long count = ILTagUtils.readILInt(in, "Invalid counter.");
 		ILTagUtils.assertArraySize(count, 1 + 1 + 1 + 1, in.remaining());
 		this.values.clear();
-		for (int i = 0; i < (int) count; i++) {
-			String key = StringTag.deserializeStandardStringTag(in);
-			String value = StringTag.deserializeStandardStringTag(in);
-			this.values.put(key, value);
+		try {
+			for (int i = 0; i < (int) count; i++) {
+				String key = StringTag.deserializeStandardStringTag(in);
+				String value = StringTag.deserializeStandardStringTag(in);
+				this.values.put(key, value);
+			}
+		} catch (UnexpectedTagException e) {
+			throw new CorruptedTagException("Unexpected tag type.", e);
 		}
 	}
 
@@ -111,7 +117,11 @@ public class StringDictonaryTag extends AbstractILTag {
 			throw new CorruptedTagException("Invalid dictionary tag.");
 		}
 		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(factory, limitedInput);
+		try {
+			deserializeValueCore(factory, limitedInput);
+		} catch (EOFException e) {
+			throw new CorruptedTagException("Invalid payload.");
+		}
 		if (limitedInput.hasRemaining()) {
 			throw new CorruptedTagException("Bad value size.");
 		}
