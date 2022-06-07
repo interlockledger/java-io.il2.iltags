@@ -37,6 +37,11 @@ import io.il2.iltags.tags.ILTag;
  * This is a single method interface that defines the tag creator used by the
  * TagFactory.
  * 
+ * <p>
+ * Classes that implements this interface must be ensure that the method
+ * io.il2.iltags.tags.factory.TagCreator.createTag(long) is thread safe.
+ * </p>
+ * 
  * @author Fabio Jun Takada Chino
  * @since 2022.05.27
  */

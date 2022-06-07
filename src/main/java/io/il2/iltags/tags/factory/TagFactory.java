@@ -62,13 +62,13 @@ import io.il2.iltags.tags.basic.StringTag;
 import io.il2.iltags.tags.basic.VersionTag;
 
 /**
- * This class implements the ILTagFactory.
+ * This class implements the ILTagFactory interface.
  * 
  * <p>
  * This factory has two modes of operation, the strict mode and the non-strict
  * mode. In the strict mode, all unknown tags will result in an
- * UnsupportedTagException. On the non-strict mode, unknown tags will be loaded
- * as BytesTags.
+ * UnsupportedTagException. On the non-strict mode, unknown tags will
+ * deserialized as instances of BytesTags.
  * </p>
  * 
  * <p>
@@ -80,9 +80,23 @@ import io.il2.iltags.tags.basic.VersionTag;
  */
 public class TagFactory extends AbstractTagFactory {
 
+	/**
+	 * This is the default tag creator. It will always returns an instance of
+	 * BytesTag with the desired tag ID.
+	 */
+	public static TagCreator DEFAULT_TAG_CREATOR = new TagCreator() {
+		@Override
+		public ILTag createTag(long id) {
+			if (TagID.isImplicit(id)) {
+				throw new IllegalArgumentException("This creator cannot handle implicit tags.");
+			}
+			return new BytesTag(id);
+		}
+	};
+
 	private final boolean strict;
 
-	private HashMap<Long, TagCreator> creators = new HashMap<>();
+	protected final HashMap<Long, TagCreator> creators = new HashMap<>();
 
 	/**
 	 * Creates a new instance of this class.
@@ -110,25 +124,43 @@ public class TagFactory extends AbstractTagFactory {
 	 * @param creator The tag creator. Set to null to unregister the creator for the
 	 *                given id.
 	 */
-	public synchronized void registerTagId(long tagId, TagCreator creator) {
+	public void registerTagId(long tagId, TagCreator creator) {
 		if (TagID.isReserved(tagId)) {
 			throw new IllegalArgumentException("Registration of handlers for reserved keys are not allowed.");
 		}
-		if (creator != null) {
-			creators.put(tagId, creator);
-		} else {
-			creators.remove(tagId);
+		synchronized (creators) {
+			if (creator != null) {
+				creators.put(tagId, creator);
+			} else {
+				creators.remove(tagId);
+			}
 		}
 	}
 
 	/**
-	 * Returns the creator for the given tag id.
+	 * Returns the creator for the given tag id. If this factory is running in
+	 * strict mode, all non registered tags will throw a UnsupportedTagException. If
+	 * it is running in non strict mode, all unknown tags will return the
+	 * DEFAULT_TAG_CREATOR.
 	 * 
 	 * @param tagId The tag id.
 	 * @return The instance of the that implements the given tag id.
+	 * @throws UnsupportedTagException If the tag is not supported.
 	 */
-	protected synchronized TagCreator getCreatorForId(long tagId) {
-		return creators.get(tagId);
+	protected TagCreator getCreatorForId(long tagId) throws UnsupportedTagException {
+		TagCreator creator;
+		synchronized (creators) {
+			creator = creators.get(tagId);
+		}
+		if (creator != null) {
+			return creator;
+		} else {
+			if (strict) {
+				throw new UnsupportedTagException(String.format("Tag with ID %1$X is not supported.", tagId));
+			} else {
+				return DEFAULT_TAG_CREATOR;
+			}
+		}
 	}
 
 	/**
@@ -138,7 +170,7 @@ public class TagFactory extends AbstractTagFactory {
 	 * @return The instance that implements the given tag.
 	 * @throws UnsupportedTagException If the tag id is not supported.
 	 */
-	protected ILTag createReserved(long tagId) throws UnsupportedTagException {
+	public static ILTag createReserved(long tagId) throws UnsupportedTagException {
 		if (!TagID.isReserved(tagId)) {
 			throw new IllegalArgumentException(String.format("The tag id %1$X is not reserved.", tagId));
 		}
@@ -198,37 +230,16 @@ public class TagFactory extends AbstractTagFactory {
 		case (int) TagID.IL_STRING_DICTIONARY_TAG_ID:
 			return StringDictonaryTag.createStandard();
 		default:
-			throw new UnsupportedTagException();
+			throw new UnsupportedTagException(String.format("Tag with ID %1$X is not supported/defined.", tagId));
 		}
-	}
-
-	/**
-	 * Creates a registered tag based on its id. This method is responsible to
-	 * implement the strict mode.
-	 * 
-	 * @param tagId The tag id.
-	 * @return The instance that implements the given tag id.
-	 * @throws UnsupportedTagException If the tag ID is not supported.
-	 */
-	protected ILTag createRegistered(long tagId) throws UnsupportedTagException {
-		TagCreator creator = getCreatorForId(tagId);
-		if (creator == null) {
-			if (isStrict()) {
-				throw new UnsupportedTagException(String.format("Tag with ID %1$X is not supported.", tagId));
-			} else {
-				// TODO Create a byte array tag here.
-				return null;
-			}
-		}
-		return creator.createTag(tagId);
 	}
 
 	@Override
-	public ILTag createTag(long id) throws ILTagException {
-		if (TagID.isReserved(id)) {
-			return createReserved(id);
+	public ILTag createTag(long tagId) throws ILTagException {
+		if (TagID.isReserved(tagId)) {
+			return createReserved(tagId);
 		} else {
-			return createRegistered(id);
+			return getCreatorForId(tagId).createTag(tagId);
 		}
 	}
 }
