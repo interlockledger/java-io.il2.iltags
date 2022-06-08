@@ -33,9 +33,25 @@ package io.il2.iltags.tags.basic;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import org.junit.jupiter.api.Test;
 
+import io.il2.iltags.ilint.ILIntEncoder;
+import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.tags.CorruptedTagException;
+import io.il2.iltags.tags.ILTagException;
+
 class ILIntTagTest {
+	
+	// sample with all kind of ILIntTag ( 1 to 9 bytes)
+	private static final long[] SAMPLE_IDS = { 0x10, 0xFEl, 0xFEDCl, 0xFEDCBAl, 0xFEDCBA98l, 0xFEDCBA9876l,
+			0xFEDCBA987654l, 0xFEDCBA98765432l, 0xFEDCBA9876543210l };
 
 	@Test
 	void testILIntTag() {
@@ -45,12 +61,16 @@ class ILIntTagTest {
 
 	@Test
 	void testGetValue() {
-		fail("Not yet implemented");
+		ILIntTag t = new ILIntTag(123456);
+		t.setValue(123);
+		assertEquals(123, t.getValue());
 	}
 
 	@Test
 	void testSetValue() {
-		fail("Not yet implemented");
+		ILIntTag t = new ILIntTag(123456);
+		t.setValue(123);
+		assertEquals(123, t.getValue());
 	}
 
 	@Test
@@ -60,13 +80,41 @@ class ILIntTagTest {
 	}
 
 	@Test
-	void testSerializeValue() {
-		fail("Not yet implemented");
+	void testSerializeValue() throws Exception {
+		ILIntTag tag = new ILIntTag(123456);
+		for (long v:SAMPLE_IDS) {
+			tag.setValue(v);
+			ByteBuffer exp = ByteBuffer.allocate(ILIntEncoder.encodedSize(v));
+			ByteBufferDataOutput expOut = new ByteBufferDataOutput(exp);
+			ILIntEncoder.encode(v, expOut);
+			
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			try (DataOutputStream out = new DataOutputStream(bOut)) {
+				tag.serializeValue(out);
+			}
+			assertArrayEquals(exp.array(), bOut.toByteArray());
+		}
 	}
+	
 
 	@Test
-	void testDeserializeValue() {
-		fail("Not yet implemented");
+	void testDeserializeValue() throws IOException, ILTagException {
+		ILIntTag tag = new ILIntTag(123456);
+		for (long v:SAMPLE_IDS) {
+			ByteBuffer exp = ByteBuffer.allocate(ILIntEncoder.encodedSize(v));
+			ByteBufferDataOutput expOut = new ByteBufferDataOutput(exp);
+			ILIntEncoder.encode(v, expOut);
+			
+			try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(exp.array()))) {
+				tag.deserializeValue(null, 123, in);
+			}
+			assertEquals(v, tag.getValue());			
+		}
+		assertThrows(CorruptedTagException.class, () -> {
+			try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, 0x08}))) {
+				tag.deserializeValue(null, 123, in);
+			}			
+		});		
 	}
 
 }

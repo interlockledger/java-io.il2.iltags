@@ -72,11 +72,8 @@ class Int8TagTest {
 
 	@Test
 	void testGetUnsignedValue() throws Exception {
-		ByteBuffer buff = ByteBuffer.wrap(BIN_SAMPLE);
-		ByteBufferDataInput in = new ByteBufferDataInput(buff);		
 		Int8Tag t = new Int8Tag(123456);
-		t.deserializeValue(null, 1, in);
-		t.deserializeValue(null, 1, in);		
+		t.setValue((byte) 0x7F);		
 		assertEquals((byte) 0x7F, t.getValue());
 	}
 
@@ -120,10 +117,13 @@ class Int8TagTest {
 		assertThrows(CorruptedTagException.class, () -> {
 			t.deserializeValue(null, 0, in);
 		});
+		assertThrows(CorruptedTagException.class, () -> {
+			t.deserializeValue(null, 2, in);
+		});			
 		t.deserializeValue(null, 1, in);
 		assertEquals((byte) 0x7F, t.getValue());
 		assertThrows(EOFException.class, () -> {
 			t.deserializeValue(null, 1, in);
-		});
+		});	
 	}
 }
