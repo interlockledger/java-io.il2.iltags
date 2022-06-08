@@ -38,12 +38,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Map;
-import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
-import io.il2.iltags.TestUtils;
-import io.il2.iltags.ilint.ILIntDecoder;
 import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.tags.CorruptedTagException;
@@ -52,12 +49,7 @@ import io.il2.iltags.tags.TagID;
 class StringDictonaryTagTest {
 
 	private String[] createSample(int n) {
-		String[] tmp = new String[n * 2];
-
-		for (int i = 0; i < tmp.length; i++) {
-			tmp[i] = Integer.toBinaryString(i);
-		}
-		return tmp;
+		return TagTestUtils.createSampleStrings(n * 2);
 	}
 
 	@Test
@@ -125,6 +117,8 @@ class StringDictonaryTagTest {
 			try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(serialized))) {
 				t.deserializeValue(null, serialized.length, in);
 			}
+
+			assertEquals(size, t.getValues().size());
 			int i = 0;
 			for (Map.Entry<String, String> entry : t.getValues().entrySet()) {
 				assertEquals(sample[i * 2], entry.getKey());

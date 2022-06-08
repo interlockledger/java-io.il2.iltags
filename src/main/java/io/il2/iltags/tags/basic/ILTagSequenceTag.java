@@ -33,6 +33,7 @@ package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ import io.il2.iltags.tags.TagID;
  */
 public class ILTagSequenceTag extends AbstractILTag {
 
-	protected List<ILTag> values;
+	protected ArrayList<ILTag> values = new ArrayList<>();
 
 	public ILTagSequenceTag(long tagId) {
 		super(tagId);
@@ -66,25 +67,17 @@ public class ILTagSequenceTag extends AbstractILTag {
 		return values;
 	}
 
-	public void setValues(List<ILTag> values) {
-		this.values = values;
-	}
-
 	@Override
 	public long getValueSize() {
-		if (values != null) {
-			long size = 0;
-			for (ILTag t : values) {
-				if (t != null) {
-					size += t.getTagSize();
-				} else {
-					size += 1;
-				}
+		long size = 0;
+		for (ILTag t : values) {
+			if (t != null) {
+				size += t.getTagSize();
+			} else {
+				size += 1;
 			}
-			return size;
-		} else {
-			return 1;
 		}
+		return size;
 	}
 
 	@Override
@@ -98,7 +91,7 @@ public class ILTagSequenceTag extends AbstractILTag {
 		}
 	}
 
-	protected void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
+	private void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
 		this.values = new ArrayList<>();
 		while (in.hasRemaining()) {
 			this.values.add(factory.deserialize(in));
@@ -109,11 +102,12 @@ public class ILTagSequenceTag extends AbstractILTag {
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
 		ILTagUtils.assertTagSizeLimit(valueSize);
-		if (valueSize < 1) {
-			throw new CorruptedTagException("Invalid ILInt array.");
-		}
 		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(factory, limitedInput);
+		try {
+			deserializeValueCore(factory, limitedInput);
+		} catch (EOFException e) {
+			throw new CorruptedTagException("Invalid serialization format.");
+		}
 	}
 
 	/**

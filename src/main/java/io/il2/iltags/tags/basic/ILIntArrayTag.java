@@ -33,6 +33,7 @@ package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.IOException;
 
 import io.il2.iltags.ilint.ILIntEncoder;
@@ -63,7 +64,7 @@ public class ILIntArrayTag extends AbstractILTag {
 		return values;
 	}
 
-	public void setValues(long[] values) {
+	public void setValues(long... values) {
 		this.values = values;
 	}
 
@@ -92,13 +93,14 @@ public class ILIntArrayTag extends AbstractILTag {
 		}
 	}
 
-	protected void deserializeValueCore(LimitedDataInput in) throws IOException, ILTagException {
+	private void deserializeValueCore(LimitedDataInput in) throws IOException, ILTagException {
 		long count = ILTagUtils.readILInt(in, "Invalid counter.");
 		ILTagUtils.assertArraySize(count, 1, in.remaining());
 		this.values = new long[(int) count];
 		for (int i = 0; i < (int) count; i++) {
 			this.values[i] = ILTagUtils.readILInt(in, "Invalid value entry.");
 		}
+
 	}
 
 	@Override
@@ -109,7 +111,11 @@ public class ILIntArrayTag extends AbstractILTag {
 			throw new CorruptedTagException("Invalid ILInt array.");
 		}
 		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(limitedInput);
+		try {
+			deserializeValueCore(limitedInput);
+		} catch (EOFException e) {
+			throw new CorruptedTagException("Invalid serialization format.");
+		}
 		if (limitedInput.hasRemaining()) {
 			throw new CorruptedTagException("Bad value size.");
 		}

@@ -120,7 +120,7 @@ public class StringDictonaryTag extends AbstractILTag {
 		try {
 			deserializeValueCore(factory, limitedInput);
 		} catch (EOFException e) {
-			throw new CorruptedTagException("Invalid payload.");
+			throw new CorruptedTagException("Invalid serialization format.");
 		}
 		if (limitedInput.hasRemaining()) {
 			throw new CorruptedTagException("Bad value size.");

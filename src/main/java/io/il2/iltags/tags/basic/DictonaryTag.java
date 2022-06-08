@@ -33,6 +33,7 @@ package io.il2.iltags.tags.basic;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class DictonaryTag extends AbstractILTag {
 		}
 	}
 
-	protected void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
+	private void deserializeValueCore(ILTagFactory factory, LimitedDataInput in) throws IOException, ILTagException {
 		long count = ILTagUtils.readILInt(in, "Invalid counter.");
 		ILTagUtils.assertArraySize(count, 1 + 1 + 1, in.remaining());
 		this.values.clear();
@@ -116,7 +117,11 @@ public class DictonaryTag extends AbstractILTag {
 			throw new CorruptedTagException("Invalid dictionary tag.");
 		}
 		LimitedDataInput limitedInput = new LimitedDataInput(in, (int) valueSize);
-		deserializeValueCore(factory, limitedInput);
+		try {
+			deserializeValueCore(factory, limitedInput);
+		} catch (EOFException e) {
+			throw new CorruptedTagException("Invalid serialization format.");
+		}
 		if (limitedInput.hasRemaining()) {
 			throw new CorruptedTagException("Bad value size.");
 		}
