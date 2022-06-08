@@ -33,7 +33,6 @@ package io.il2.iltags.tags.basic;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -41,47 +40,64 @@ import org.junit.jupiter.api.Test;
 
 import io.il2.iltags.io.ByteBufferDataInput;
 import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.TagID;
 
-class BytesTagTest {
+class Int32TagTest {
 	
-	private static final byte[] SAMPLE_IDS = {(byte)0xfe, (byte)0xab, (byte) 0x7F, (byte) 0xAC};	
+	private static final byte[] SAMPLE_IDS = {(byte)0xFE, (byte)0xAB, (byte) 0xFC, (byte) 0xDD, (byte)0xAD, (byte)0xCB, (byte) 0xFB, (byte) 0xEE};	
 
 	@Test
-	void testBytesTag() {
-		BytesTag t = new BytesTag(123456);
+	void testInt32Tag() {
+		Int32Tag t = new Int32Tag(123456);
 		assertEquals(123456, t.getTagID());
 	}
 
 	@Test
 	void testGetValue() {
-		BytesTag t = new BytesTag(123456);
-		t.setValue(SAMPLE_IDS);
-		assertEquals(SAMPLE_IDS, t.getValue());
+		Int32Tag t = new Int32Tag(123456);
+		t.setValue((int)0xFEABFCDD);
+		assertEquals((int)0xFEABFCDD, t.getValue());
 	}
 
 	@Test
 	void testSetValue() {
-		BytesTag t = new BytesTag(123456);
-		t.setValue(SAMPLE_IDS);
-		assertEquals(SAMPLE_IDS, t.getValue());
+		Int32Tag t = new Int32Tag(123456);
+		t.setValue((int)0xFEABFCDD);
+		assertEquals((int)0xFEABFCDD, t.getValue());
+	}
+
+	@Test
+	void testGetUnsignedValue() {
+		Int32Tag t = new Int32Tag(123456);
+		int uInt = (int) 0xFEABFCDD & 0xffffffff;
+		t.setValue(uInt);		
+		assertEquals((int) 0xFEABFCDD, t.getValue());
+	}
+
+	@Test
+	void testSetUnsignedValue() {
+		Int32Tag t = new Int32Tag(123456);
+		int uInt = (int) 0xFEABFCDD & 0xffffffff;
+		t.setValue(uInt);		
+		assertEquals((int) 0xFEABFCDD, t.getValue());
 	}
 
 	@Test
 	void testGetValueSize() {
-		BytesTag t = new BytesTag(123456);
-		assertEquals(0, t.getValueSize());
-		t.setValue(SAMPLE_IDS);
-		assertEquals(4, t.getValueSize());		
+		Int32Tag t = new Int32Tag(123456);
+		assertEquals(4, t.getValueSize());
 	}
 
 	@Test
 	void testSerializeValue() throws IOException {
-		BytesTag t = new BytesTag(123456);
-		t.setValue(SAMPLE_IDS);
-		ByteBuffer buff = ByteBuffer.allocate(4);
+		Int32Tag t = new Int32Tag(123456);
+		t.setValue((int) 0xFEABFCDD);
+		ByteBuffer buff = ByteBuffer.allocate(8);
 		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
+		t.serializeValue(out);
+		t.setValue((int) 0xADCBFBEE);
 		t.serializeValue(out);
 		assertArrayEquals(SAMPLE_IDS,buff.array());
 	}
@@ -90,19 +106,33 @@ class BytesTagTest {
 	void testDeserializeValue() throws IOException, ILTagException {
 		ByteBuffer buff = ByteBuffer.wrap(SAMPLE_IDS);
 		ByteBufferDataInput in = new ByteBufferDataInput(buff);
-		BytesTag t = new BytesTag(123456);
+
+		Int32Tag t = new Int32Tag(123456);
 		t.deserializeValue(null, 4, in);
-		assertArrayEquals(SAMPLE_IDS, t.getValue());		
-		t.deserializeValue(null, 0, in);
-		assertThrows(EOFException.class, () -> {
-			t.deserializeValue(null, 10, in);
+		assertEquals((int) 0xFEABFCDD, t.getValue());
+		assertThrows(CorruptedTagException.class, () -> {
+			t.deserializeValue(null, 0, in);
 		});
+		assertThrows(CorruptedTagException.class, () -> {
+			t.deserializeValue(null, 1, in);
+		});			
+		t.deserializeValue(null, 4, in);	
+		assertThrows(CorruptedTagException.class, () -> {
+			t.deserializeValue(null, 20, in);
+		});			
+
 	}
 
 	@Test
-	void testCreateStandard() {
-		BytesTag t = BytesTag.createStandard();
-		assertEquals(t.getTagID(), TagID.IL_BYTES_TAG_ID);
+	void testCreateStandardSigned() {
+		Int32Tag t = Int32Tag.createStandardSigned();
+		assertEquals(t.getTagID(), TagID.IL_INT32_TAG_ID);
+	}
+
+	@Test
+	void testCreateStandardUnsigned() {
+		Int32Tag t = Int32Tag.createStandardUnsigned();
+		assertEquals(t.getTagID(), TagID.IL_UINT32_TAG_ID);
 	}
 
 }
