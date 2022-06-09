@@ -45,7 +45,6 @@ import java.nio.charset.CodingErrorAction;
 
 import org.junit.jupiter.api.Test;
 
-
 public class UTF8UtilsTest {
 
 	private static final int[] WIKI_CODEPOINTS = { 0x24, 0xA2, 0x939, 0x20AC, 0x10348 };
@@ -79,14 +78,14 @@ public class UTF8UtilsTest {
 
 	@Test
 	public void testGetUTF8CharSizeInvalidNegative() {
-		assertThrows(IllegalArgumentException.class, ()-> {
+		assertThrows(IllegalArgumentException.class, () -> {
 			UTF8Utils.getUTF8CharSize(-1);
 		});
 	}
 
 	@Test
 	public void testGetUTF8CharSizeInvalidTooLarge() {
-		assertThrows(IllegalArgumentException.class, ()-> {
+		assertThrows(IllegalArgumentException.class, () -> {
 			UTF8Utils.getUTF8CharSize(0x110000);
 		});
 	}
@@ -105,7 +104,7 @@ public class UTF8UtilsTest {
 
 	@Test
 	public void testGetUTF8EncodedCharSizeFail() {
-		assertThrows(IllegalArgumentException.class, ()-> {
+		assertThrows(IllegalArgumentException.class, () -> {
 			UTF8Utils.getUTF8EncodedCharSize((byte) 0b11111000);
 		});
 	}
@@ -164,6 +163,7 @@ public class UTF8UtilsTest {
 		assertEquals(0x7F, UTF8Utils.toCodepoint(sample, 1));
 	}
 
+	@Test
 	public void testToCodepoint2() {
 		byte[] sample = new byte[2];
 
@@ -177,7 +177,7 @@ public class UTF8UtilsTest {
 
 		sample[0] = (byte) 0b11010101;
 		sample[1] = (byte) 0b10101010;
-		assertEquals(0b1010110101010, UTF8Utils.toCodepoint(sample, 2));
+		assertEquals(0b10101101010, UTF8Utils.toCodepoint(sample, 2));
 
 		sample[0] = (byte) 0b11011111;
 		sample[1] = (byte) 0b10111111;
