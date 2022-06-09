@@ -41,7 +41,7 @@
  * </p>
  * 
  * <table border="1" width="80%">
- * <caption>List</caption>
+ * <caption>Map of the classes that implements each standard tag.</caption>
  * <tr>
  * <th>Standard tag</th>
  * <th>Class</th>
