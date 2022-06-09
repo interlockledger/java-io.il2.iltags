@@ -169,9 +169,10 @@ public class ByteBufferDataOutput implements DataOutput {
 	/**
 	 * Returns the length of string encoded as modified UTF-8 in bytes.
 	 * 
+	 * @param s The string to be encoded.
 	 * @return The length of the string in bytes.
 	 */
-	protected static int utf8Len(String s) {
+	protected static int utf8Len(CharSequence s) {
 		int len = 0;
 		for (int i = 0; i < s.length(); i++) {
 			len += utf8CharSize(s.charAt(i));
