@@ -33,11 +33,15 @@ package io.il2.iltags.tags.payload;
 
 import java.io.DataInput;
 import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.IOException;
 
+import io.il2.iltags.io.LimitedDataInput;
 import io.il2.iltags.tags.AbstractILTag;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.ILTagException;
 import io.il2.iltags.tags.ILTagFactory;
+import io.il2.iltags.tags.ILTagUtils;
 
 /**
  * This class implements a ILTag that holds a TagPayload. Custom tags may use
@@ -51,11 +55,22 @@ public class PayloadedTag<T extends TagPayload> extends AbstractILTag {
 
 	private final T payload;
 
-	protected PayloadedTag(long tagId, T payload) {
+	/**
+	 * Creates a new instance of this class.
+	 * 
+	 * @param tagId   The tag id.
+	 * @param payload The payload. It cannot be null.
+	 */
+	public PayloadedTag(long tagId, T payload) {
 		super(tagId);
 		this.payload = payload;
 	}
 
+	/**
+	 * Returns the payload.
+	 * 
+	 * @return The payload.
+	 */
 	public T getPayload() {
 		return this.payload;
 	}
@@ -73,6 +88,15 @@ public class PayloadedTag<T extends TagPayload> extends AbstractILTag {
 	@Override
 	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in)
 			throws IOException, ILTagException {
-		getPayload().deserializeValue(factory, valueSize, in);
+		ILTagUtils.assertTagSizeLimit(valueSize);
+		LimitedDataInput limited = new LimitedDataInput(in, (int) valueSize);
+		try {
+			getPayload().deserializeValue(factory, valueSize, limited);
+		} catch (EOFException e) {
+			throw new CorruptedTagException("The serialized value is corrupted.", e);
+		}
+		if (limited.hasRemaining()) {
+			throw new CorruptedTagException("The serialized value was not fully consumed.");
+		}
 	}
 }

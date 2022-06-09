@@ -49,7 +49,7 @@ public class ILIntEncoder {
 	 * Returns the ILInt encoded size. The value of v will be viewed as an unsigned
 	 * value.
 	 * 
-	 * @param v The value.
+	 * @param u The value.
 	 * @return The number of bytes required to encode the value.
 	 */
 	public static int encodedSize(long u) {
@@ -78,7 +78,7 @@ public class ILIntEncoder {
 	/**
 	 * Returns the signed ILInt encoded size.
 	 * 
-	 * @param v The value.
+	 * @param s The value.
 	 * @return The number of bytes required to encode the value.
 	 */
 	public static int signedEncodedSize(long s) {

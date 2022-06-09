@@ -69,8 +69,9 @@ public abstract class AbstractTagFactory implements ILTagFactory {
 	 * @param tag       The tag.
 	 * @param valueSize The value size. It may be -1 if the size is unknown.
 	 * @param in        The data input.
-	 * @throws IOException    In case of IO error.
-	 * @throws ILTagException If the serialization data is corrupted.
+	 * @throws IOException           In case of IO error.
+	 * @throws CorruptedTagException If the value is corrupted.
+	 * @throws ILTagException        If the serialization data is corrupted.
 	 */
 	protected void deserializeValue(ILTag tag, long valueSize, DataInput in)
 			throws IOException, CorruptedTagException, ILTagException {
