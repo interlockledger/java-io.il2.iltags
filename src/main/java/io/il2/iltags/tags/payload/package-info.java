@@ -29,56 +29,23 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package io.il2.iltags.tags.payload;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import io.il2.iltags.tags.ILTagException;
-import io.il2.iltags.tags.ILTagFactory;
 
 /**
- * This is the interface defined by a tag payload. Any class that implements
- * this inteface can be used to create a new tag type.
+ * This package defines an specialized ILTag implementation that separates the
+ * value (payload) and the tag implementation.With this package, new tags custom
+ * tags can be created by implementing the interface
+ * io.il2.iltags.tags.payload.TagPayload.
  * 
- * @author Fabio Jun Takada Chino
- * @since 2022.05.27
+ * <p>
+ * Once the a payload implementation is done, it is possible to create the a new
+ * instance of io.il2.iltags.tags.payload.PayloadedTag&lt;T&gt; targeting this
+ * payload.
+ * </p>
+ * 
+ * <p>
+ * To enable the deserialization of this new tag, just register a proper
+ * io.il2.iltags.tags.factory.TagCreator into an instance of
+ * io.il2.iltags.tags.factory.TagFactory and use it do deserialize the tags.
+ * </p>
  */
-public interface TagPayload {
-
-	/**
-	 * Returns the size of the value in bytes.
-	 * 
-	 * @return The size of the value in bytes.
-	 */
-	public long getValueSize();
-
-	/**
-	 * Serializes the value. It is expected write exact getValueSize() bytes into
-	 * the provided data output.
-	 * 
-	 * <p>
-	 * The serialization format is expected to be as stable as possible and
-	 * canonized. This means that 2 serializations of the same instance must result
-	 * in the same serialized value.
-	 * </p>
-	 * 
-	 * @param out The data output that will receive the serialization.
-	 * @throws IOException In case of error.
-	 * @see io.il2.iltags.tags.payload.TagPayload.getValueSize()
-	 */
-	public void serializeValue(DataOutput out) throws IOException;
-
-	/**
-	 * Deserializes the value. This method is expected to consume all bytes defined
-	 * by valueSize.
-	 * 
-	 * @param factory   The tag factory.
-	 * @param valueSize The size of the serialized value.
-	 * @param in        The data input.
-	 * @throws IOException    In case of IO related errors.
-	 * @throws ILTagException In case of deserialization problems.
-	 */
-	public void deserializeValue(ILTagFactory factory, long valueSize, DataInput in) throws IOException, ILTagException;
-}
+package io.il2.iltags.tags.payload;
