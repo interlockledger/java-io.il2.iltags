@@ -21,7 +21,8 @@ class Int64TagTest {
 	@Test
 	void testInt64Tag() {
 		Int64Tag t = new Int64Tag(123456);
-		assertEquals(123456, t.getTagID());	}
+		assertEquals(123456, t.getTagID());	
+	}
 
 	@Test
 	void testGetValue() {
