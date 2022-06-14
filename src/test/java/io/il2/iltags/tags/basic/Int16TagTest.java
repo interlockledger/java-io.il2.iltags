@@ -47,7 +47,7 @@ import io.il2.iltags.tags.TagID;
 
 class Int16TagTest {
 
-	private static final byte[] SAMPLE_IDS = {(byte)0xfe, (byte)0xab, (byte) 0x7F, (byte) 0xAC};
+	private static final byte[] SAMPLE_IDS = {(byte)0xfe, (byte)0xab};
 	
 	@Test
 	void testInt16Tag() {
@@ -80,8 +80,7 @@ class Int16TagTest {
 	@Test
 	void testSetUnsignedValue() {
 		Int16Tag t = new Int16Tag(123456);
-		short uInt = (short) 0xFEl & 0xffff;
-		t.setValue(uInt);		
+		t.setValue((short)( 0xFEl & 0xffff));			
 		assertEquals((short) 0xFEl, t.getValue());
 	}
 
@@ -89,16 +88,16 @@ class Int16TagTest {
 	void testGetValueSize() {
 		Int16Tag t = new Int16Tag(123456);
 		assertEquals(2, t.getValueSize());
+		t.setValue((short)( 0xFEl & 0xffff));		
+		assertEquals(2, t.getValueSize());		
 	}
 
 	@Test
 	void testSerializeValue() throws IOException {
 		Int16Tag t = new Int16Tag(123456);
 		t.setValue((short) 0xfeab);
-		ByteBuffer buff = ByteBuffer.allocate(4);
+		ByteBuffer buff = ByteBuffer.allocate(2);
 		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
-		t.serializeValue(out);
-		t.setValue((short) 0x7fac);
 		t.serializeValue(out);
 		assertArrayEquals(SAMPLE_IDS,buff.array());
 	}
@@ -117,8 +116,6 @@ class Int16TagTest {
 		assertThrows(CorruptedTagException.class, () -> {
 			t.deserializeValue(null, 1, in);
 		});			
-		
-		t.deserializeValue(null, 2, in);
 		assertThrows(EOFException.class, () -> {
 			t.deserializeValue(null, 2, in);
 		});

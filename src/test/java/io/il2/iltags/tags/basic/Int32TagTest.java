@@ -46,7 +46,7 @@ import io.il2.iltags.tags.TagID;
 
 class Int32TagTest {
 	
-	private static final byte[] SAMPLE_IDS = {(byte)0xFE, (byte)0xAB, (byte) 0xFC, (byte) 0xDD, (byte)0xAD, (byte)0xCB, (byte) 0xFB, (byte) 0xEE};	
+	private static final byte[] SAMPLE_IDS = {(byte)0xFE, (byte)0xAB, (byte) 0xFC, (byte) 0xDD};	
 
 	@Test
 	void testInt32Tag() {
@@ -71,16 +71,14 @@ class Int32TagTest {
 	@Test
 	void testGetUnsignedValue() {
 		Int32Tag t = new Int32Tag(123456);
-		int uInt = (int) 0xFEABFCDD & 0xffffffff;
-		t.setValue(uInt);		
+		t.setValue((int) (0xFEABFCDD & 0xffffffff));		
 		assertEquals((int) 0xFEABFCDD, t.getValue());
 	}
 
 	@Test
 	void testSetUnsignedValue() {
 		Int32Tag t = new Int32Tag(123456);
-		int uInt = (int) 0xFEABFCDD & 0xffffffff;
-		t.setValue(uInt);		
+		t.setValue((int) (0xFEABFCDD & 0xffffffff));		
 		assertEquals((int) 0xFEABFCDD, t.getValue());
 	}
 
@@ -88,16 +86,16 @@ class Int32TagTest {
 	void testGetValueSize() {
 		Int32Tag t = new Int32Tag(123456);
 		assertEquals(4, t.getValueSize());
+		t.setValue((int) (0xFEABFCDD & 0xffffffff));
+		assertEquals(4, t.getValueSize());
 	}
 
 	@Test
 	void testSerializeValue() throws IOException {
 		Int32Tag t = new Int32Tag(123456);
 		t.setValue((int) 0xFEABFCDD);
-		ByteBuffer buff = ByteBuffer.allocate(8);
+		ByteBuffer buff = ByteBuffer.allocate(4);
 		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
-		t.serializeValue(out);
-		t.setValue((int) 0xADCBFBEE);
 		t.serializeValue(out);
 		assertArrayEquals(SAMPLE_IDS,buff.array());
 	}
@@ -115,10 +113,9 @@ class Int32TagTest {
 		});
 		assertThrows(CorruptedTagException.class, () -> {
 			t.deserializeValue(null, 1, in);
-		});			
-		t.deserializeValue(null, 4, in);	
-		assertThrows(CorruptedTagException.class, () -> {
-			t.deserializeValue(null, 20, in);
+		});				
+		assertThrows(IOException.class, () -> {
+			t.deserializeValue(null, 4, in);
 		});			
 
 	}

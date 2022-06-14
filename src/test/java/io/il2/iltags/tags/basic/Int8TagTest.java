@@ -46,7 +46,7 @@ import io.il2.iltags.tags.ILTagException;
 
 class Int8TagTest {
 
-	private static final byte[] BIN_SAMPLE = { (byte) 0xCA, (byte) 0x7F };
+	private static final byte[] BIN_SAMPLE = { (byte) 0xCA };
 
 	@Test
 	void testInt8Tag() {
@@ -88,17 +88,16 @@ class Int8TagTest {
 	void testGetValueSize() {
 		Int8Tag t = new Int8Tag(123456);
 		assertEquals(1, t.getValueSize());
+		t.setValue((byte) 0x7F);
+		assertEquals(1, t.getValueSize());		
 	}
 
 	@Test
 	void testSerializeValue() throws Exception {
-		ByteBuffer buff = ByteBuffer.allocate(2);
+		ByteBuffer buff = ByteBuffer.allocate(1);
 		ByteBufferDataOutput out = new ByteBufferDataOutput(buff);
 		Int8Tag t = new Int8Tag(123456);
-
 		t.setValue((byte) 0xCA);
-		t.serializeValue(out);
-		t.setValue((byte) 0x7F);
 		t.serializeValue(out);
 		assertArrayEquals(BIN_SAMPLE, buff.array());
 		assertThrows(IOException.class, () -> {
@@ -120,8 +119,6 @@ class Int8TagTest {
 		assertThrows(CorruptedTagException.class, () -> {
 			t.deserializeValue(null, 2, in);
 		});			
-		t.deserializeValue(null, 1, in);
-		assertEquals((byte) 0x7F, t.getValue());
 		assertThrows(EOFException.class, () -> {
 			t.deserializeValue(null, 1, in);
 		});	
