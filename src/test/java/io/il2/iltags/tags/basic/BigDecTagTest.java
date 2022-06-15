@@ -33,66 +33,64 @@ package io.il2.iltags.tags.basic;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
 
-import io.il2.iltags.ilint.ILIntEncoder;
 import io.il2.iltags.io.ByteBufferDataOutput;
 import io.il2.iltags.tags.TagID;
 
-class SignedILIntTagTest {
-	
-	// -97, 
-	private static final long[] SAMPLE_IDS = { 0x9D, 0x9D9D, 0xFFD99D9D};	
-	
-	private static final long sLong1 = -98723886;
+class BigDecTagTest {
+	BigDecimal BigDec1 = new BigDecimal(234.7843);
+	// "234.7843" in hex: 32 33 34 2e 37 38 34 33
+	private static final byte[] SAMPLE_IDS = {(byte)0x32, (byte)0x33, (byte) 0x34, (byte) 0x2e, (byte)0x37, (byte)0x38, (byte) 0x34, (byte) 0x33};		
 
 	@Test
-	void testSignedILIntTag() {
-		SignedILIntTag t = new SignedILIntTag(123456);
+	void testBigDecTag() {
+		BigDecTag t = new BigDecTag(123456);
 		assertEquals(123456, t.getTagID());
 	}
 
 	@Test
 	void testGetValue() {
-		SignedILIntTag t = new SignedILIntTag(123456);
-		t.setValue(sLong1);
-		assertEquals(sLong1, t.getValue());
+		BigDecTag t = new BigDecTag(123456);
+		t.setValue(BigDec1);
+		assertEquals(BigDec1, t.getValue());
 	}
 
 	@Test
 	void testSetValue() {
-		SignedILIntTag t = new SignedILIntTag(123456);
-		t.setValue(sLong1);
-		assertEquals(sLong1, t.getValue());
+		BigDecTag t = new BigDecTag(123456);
+		t.setValue(BigDec1);
+		assertEquals(BigDec1, t.getValue());
 	}
 
 	@Test
 	void testGetValueSize() {
-		SignedILIntTag t = new SignedILIntTag(123456);
-		assertEquals(1, t.getValueSize());
-		t.setValue(sLong1);
+		BigDecTag t = new BigDecTag(123456);
 		assertEquals(5, t.getValueSize());
+		t.setValue(BigDec1);
+		assertEquals(24, t.getValueSize());		
 	}
 
 	@Test
 	void testSerializeValue() throws IOException {
 		fail("Not yet implemented");
 	}
+	
 
 	@Test
 	void testDeserializeValue() {
-		fail("Not yet implemented");		
+		fail("Not yet implemented");
 	}
-	
+
 	@Test
 	void testCreateStandard() {
-		SignedILIntTag t = SignedILIntTag.createStandard();
-		assertEquals(TagID.IL_SIGNED_ILINT_TAG_ID, t.getTagID());		
-	}	
+		BigDecTag t = BigDecTag.createStandard();
+		assertEquals(t.getTagID(), TagID.IL_BDEC_TAG_ID);
+	}
 
 }
