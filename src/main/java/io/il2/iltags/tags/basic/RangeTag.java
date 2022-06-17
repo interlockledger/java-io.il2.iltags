@@ -100,7 +100,7 @@ public class RangeTag extends AbstractILTag {
 		}
 		LimitedDataInput limited = new LimitedDataInput(in, (int) valueSize);
 		this.first = ILTagUtils.readILInt(limited, "Invalid value.");
-		this.count = in.readUnsignedShort();
+		this.count = limited.readUnsignedShort();
 		if (limited.hasRemaining()) {
 			throw new CorruptedTagException("Corrupted range tag. Too many bytes.");
 		}
