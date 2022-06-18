@@ -36,19 +36,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
 
 import io.il2.iltags.ilint.ILIntEncoder;
-import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.io.ByteBufferDataInput;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.TagID;
 
 class SignedILIntTagTest {
-	
-	// -97, 
-	private static final long[] SAMPLE_IDS = { 0x9D, 0x9D9D, 0xFFD99D9D};	
-	
+
 	private static final long sLong1 = -98723886;
 
 	@Test
@@ -81,18 +78,49 @@ class SignedILIntTagTest {
 
 	@Test
 	void testSerializeValue() throws IOException {
-		fail("Not yet implemented");
+		SignedILIntTag t = new SignedILIntTag(123456);
+
+		for (long v : new long[] { 0, 1, -1, 9223372036854775807l, -9223372036854775808l }) {
+			ByteArrayOutputStream exp = new ByteArrayOutputStream();
+			try (DataOutputStream out = new DataOutputStream(exp)) {
+				ILIntEncoder.encodeSigned(v, out);
+			}
+			t.setValue(v);
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			try (DataOutputStream out = new DataOutputStream(bOut)) {
+				t.serializeValue(out);
+			}
+			assertArrayEquals(exp.toByteArray(), bOut.toByteArray());
+		}
 	}
 
 	@Test
-	void testDeserializeValue() {
-		fail("Not yet implemented");		
+	void testDeserializeValue() throws Exception {
+		SignedILIntTag t = new SignedILIntTag(123456);
+
+		for (long v : new long[] { 0, 1, -1, 9223372036854775807l, -9223372036854775808l }) {
+			ByteArrayOutputStream exp = new ByteArrayOutputStream();
+			try (DataOutputStream out = new DataOutputStream(exp)) {
+				ILIntEncoder.encodeSigned(v, out);
+			}
+			byte[] serialized = exp.toByteArray();
+			ByteBufferDataInput in = new ByteBufferDataInput(serialized);
+			t.deserializeValue(null, -1, in);
+			assertEquals(v, t.getValue());
+		}
+
+		assertThrows(CorruptedTagException.class, () -> {
+			byte[] serialized = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+					(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xF8 };
+			ByteBufferDataInput in = new ByteBufferDataInput(serialized);
+			t.deserializeValue(null, -1, in);
+		});
 	}
-	
+
 	@Test
 	void testCreateStandard() {
 		SignedILIntTag t = SignedILIntTag.createStandard();
-		assertEquals(TagID.IL_SIGNED_ILINT_TAG_ID, t.getTagID());		
-	}	
+		assertEquals(TagID.IL_SIGNED_ILINT_TAG_ID, t.getTagID());
+	}
 
 }
