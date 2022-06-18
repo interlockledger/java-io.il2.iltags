@@ -33,20 +33,19 @@ package io.il2.iltags.tags.basic;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
 
-import io.il2.iltags.io.ByteBufferDataOutput;
+import io.il2.iltags.io.ByteBufferDataInput;
+import io.il2.iltags.tags.CorruptedTagException;
 import io.il2.iltags.tags.TagID;
 
 class BigDecTagTest {
 	BigDecimal BigDec1 = new BigDecimal(234.7843);
-	// "234.7843" in hex: 32 33 34 2e 37 38 34 33
-	private static final byte[] SAMPLE_IDS = {(byte)0x32, (byte)0x33, (byte) 0x34, (byte) 0x2e, (byte)0x37, (byte)0x38, (byte) 0x34, (byte) 0x33};		
 
 	@Test
 	void testBigDecTag() {
@@ -73,18 +72,45 @@ class BigDecTagTest {
 		BigDecTag t = new BigDecTag(123456);
 		assertEquals(5, t.getValueSize());
 		t.setValue(BigDec1);
-		assertEquals(24, t.getValueSize());		
+		assertEquals(24, t.getValueSize());
 	}
 
 	@Test
 	void testSerializeValue() throws IOException {
-		fail("Not yet implemented");
+		BigDecTag t = new BigDecTag(123456);
+
+		t.setValue(new BigDecimal("6.02214076E23"));
+		ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+		try (DataOutputStream out = new DataOutputStream(bOut)) {
+			t.serializeValue(out);
+		}
+		assertArrayEquals(new byte[] { -1, -1, -1, -15, 35, -27, 14, -68 }, bOut.toByteArray());
+
+		t.setValue(new BigDecimal("-6.02214076E-23"));
+		bOut = new ByteArrayOutputStream();
+		try (DataOutputStream out = new DataOutputStream(bOut)) {
+			t.serializeValue(out);
+		}
+		assertArrayEquals(new byte[] { 0, 0, 0, 31, -36, 26, -15, 68 }, bOut.toByteArray());
 	}
-	
 
 	@Test
-	void testDeserializeValue() {
-		fail("Not yet implemented");
+	void testDeserializeValue() throws Exception {
+		BigDecTag t = new BigDecTag(123456);
+
+		ByteBufferDataInput in = new ByteBufferDataInput(new byte[] { -1, -1, -1, -15, 35, -27, 14, -68 });
+		t.deserializeValue(null, 8, in);
+		assertEquals(new BigDecimal("6.02214076E23"), t.getValue());
+
+		in = new ByteBufferDataInput(new byte[] { 0, 0, 0, 31, -36, 26, -15, 68 });
+		t.deserializeValue(null, 8, in);
+		assertEquals(new BigDecimal("-6.02214076E-23"), t.getValue());
+
+		assertThrows(CorruptedTagException.class, () -> {
+			ByteBufferDataInput in2 = new ByteBufferDataInput(
+					new byte[] { (byte) 0xFA, (byte) 0xFA, (byte) 0xCA, (byte) 0xDA, (byte) 0xD4, 0x31 });
+			t.deserializeValue(null, 4, in2);
+		});
 	}
 
 	@Test
@@ -92,5 +118,4 @@ class BigDecTagTest {
 		BigDecTag t = BigDecTag.createStandard();
 		assertEquals(t.getTagID(), TagID.IL_BDEC_TAG_ID);
 	}
-
 }
